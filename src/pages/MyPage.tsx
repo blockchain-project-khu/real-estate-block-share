@@ -12,6 +12,7 @@ import { ArrowDown, ArrowUp, Edit } from 'lucide-react';
 const MyPage = () => {
   const navigate = useNavigate();
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
+  const [showCompletedRents, setShowCompletedRents] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price);
@@ -75,16 +76,37 @@ const MyPage = () => {
     }
   ];
 
-  const mockRents = [
+  const mockRentApplications = [
     {
       id: 'rent1',
+      propertyName: '강남구 신축 오피스텔',
+      location: '서울 강남구 역삼동',
+      monthlyRent: 250,
+      applicationDate: '2024-01-10',
+      fundingProgress: 100,
+      status: '임대 중',
+      paymentHistory: [
+        { date: '2024-02-01', amount: 250, status: '완료' },
+        { date: '2024-03-01', amount: 250, status: '완료' },
+        { date: '2024-04-01', amount: 250, status: '완료' },
+        { date: '2024-05-01', amount: 250, status: '완료' },
+        { date: '2024-06-01', amount: 250, status: '예정' }
+      ]
+    },
+    {
+      id: 'rent2',
       propertyName: '송파구 투룸 원룸',
       location: '서울 송파구 잠실동',
-      monthlyRent: 80,
-      dueDate: '2024-06-10',
-      status: '납부 예정'
+      monthlyRent: 180,
+      applicationDate: '2024-03-15',
+      fundingProgress: 75,
+      status: '펀딩 대기',
+      paymentHistory: []
     }
   ];
+
+  const completedRents = mockRentApplications.filter(rent => rent.fundingProgress === 100);
+  const pendingRents = mockRentApplications.filter(rent => rent.fundingProgress < 100);
 
   const handleEditInvestment = (investment: any) => {
     navigate(`/property/${investment.id}/invest`, {
@@ -312,36 +334,134 @@ const MyPage = () => {
             </Card>
           </TabsContent>
 
-          {/* 월세 납부 */}
+          {/* 월세 납부 - 업데이트됨 */}
           <TabsContent value="rents" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>월세 납부</CardTitle>
-                <CardDescription>임대 중인 매물의 월세를 납부하세요</CardDescription>
+                <CardTitle>월세 납부 현황</CardTitle>
+                <CardDescription>임대한 매물의 월세 납부 현황을 확인하세요</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {mockRents.map((rent) => (
-                  <Card key={rent.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="font-semibold">{rent.propertyName}</h3>
-                          <p className="text-sm text-gray-600">{rent.location}</p>
-                          <p className="text-sm text-gray-600">납부 예정일: {rent.dueDate}</p>
-                        </div>
-                        <div className="text-right space-y-2">
-                          <p className="font-bold text-lg">{formatPrice(rent.monthlyRent)}만원</p>
-                          <Button 
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleRentPayment(rent.id)}
-                          >
-                            월세 납부
-                          </Button>
-                        </div>
+                <div className="flex gap-4 mb-4">
+                  <Button 
+                    variant={!showCompletedRents ? "default" : "outline"}
+                    onClick={() => setShowCompletedRents(false)}
+                  >
+                    펀딩 대기 중 ({pendingRents.length})
+                  </Button>
+                  <Button 
+                    variant={showCompletedRents ? "default" : "outline"}
+                    onClick={() => setShowCompletedRents(true)}
+                  >
+                    월세 납부 중 ({completedRents.length})
+                  </Button>
+                </div>
+
+                {!showCompletedRents ? (
+                  // 펀딩 대기 중인 임대 신청
+                  <div className="space-y-4">
+                    {pendingRents.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        펀딩 대기 중인 임대 신청이 없습니다.
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    ) : (
+                      pendingRents.map((rent) => (
+                        <Card key={rent.id}>
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h3 className="font-semibold">{rent.propertyName}</h3>
+                                <p className="text-sm text-gray-600">{rent.location}</p>
+                                <p className="text-sm text-gray-600">신청일: {rent.applicationDate}</p>
+                                <Badge className="bg-yellow-100 text-yellow-800 mt-1">
+                                  펀딩 {rent.fundingProgress}% - 대기 중
+                                </Badge>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-lg">{formatPrice(rent.monthlyRent)}만원</p>
+                                <p className="text-sm text-gray-500">월 임대료</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  // 펀딩 완료된 임대 (월세 납부 중)
+                  <div className="space-y-4">
+                    {completedRents.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        월세 납부 중인 임대가 없습니다.
+                      </div>
+                    ) : (
+                      completedRents.map((rent) => (
+                        <Collapsible key={rent.id}>
+                          <CollapsibleTrigger 
+                            className="w-full"
+                            onClick={() => toggleItem(rent.id)}
+                          >
+                            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div className="text-left">
+                                    <h3 className="font-semibold">{rent.propertyName}</h3>
+                                    <p className="text-sm text-gray-600">{rent.location}</p>
+                                    <Badge className="bg-green-100 text-green-800 mt-1">
+                                      임대 중 - 자동 납부
+                                    </Badge>
+                                  </div>
+                                  <div className="text-right flex items-center gap-4">
+                                    <div>
+                                      <p className="font-bold text-lg">{formatPrice(rent.monthlyRent)}만원</p>
+                                      <p className="text-sm text-gray-600">월 임대료</p>
+                                    </div>
+                                    {openItems[rent.id] ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </CollapsibleTrigger>
+                          
+                          <CollapsibleContent>
+                            <Card className="mt-2 bg-gray-50">
+                              <CardContent className="p-4">
+                                <h4 className="font-semibold mb-3">월세 납부 내역</h4>
+                                <div className="space-y-2">
+                                  {rent.paymentHistory.map((payment, index) => (
+                                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                                      <div>
+                                        <span className="font-medium">{payment.date}</span>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <span className="font-bold">{formatPrice(payment.amount)}만원</span>
+                                        <Badge className={payment.status === '완료' ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}>
+                                          {payment.status}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                
+                                {rent.paymentHistory.some(p => p.status === '예정') && (
+                                  <div className="mt-4 pt-4 border-t">
+                                    <Button 
+                                      size="sm" 
+                                      className="bg-green-600 hover:bg-green-700"
+                                      onClick={() => handleRentPayment(rent.id)}
+                                    >
+                                      다음 월세 미리 납부
+                                    </Button>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      ))
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

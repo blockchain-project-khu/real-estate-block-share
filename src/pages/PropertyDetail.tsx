@@ -1,9 +1,9 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -56,6 +56,16 @@ const PropertyDetail = () => {
     });
   };
 
+  const handleRentApplication = () => {
+    navigate(`/property/${id}/rent`, {
+      state: {
+        propertyName: mockProperty.title,
+        monthlyRent: mockProperty.monthlyRent,
+        fundingProgress: mockProperty.fundingProgress
+      }
+    });
+  };
+
   const investment = calculateInvestment();
 
   return (
@@ -65,7 +75,7 @@ const PropertyDetail = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button 
           variant="ghost" 
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/home')}
           className="mb-4 flex items-center gap-2"
         >
           <ArrowUp className="rotate-[-90deg]" size={16} />
@@ -147,7 +157,7 @@ const PropertyDetail = () => {
             </Card>
           </div>
           
-          {/* 투자 정보 */}
+          {/* 투자 및 임대 정보 */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -199,6 +209,40 @@ const PropertyDetail = () => {
                 
                 <div className="text-xs text-gray-500 text-center">
                   * 실제 수익률은 시장 상황에 따라 변동될 수 있습니다.
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>임대하기</CardTitle>
+                <CardDescription>이 매물을 임대하여 거주하세요</CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">월 임대료</span>
+                    <span className="font-bold text-lg">{formatPrice(mockProperty.monthlyRent)}만원</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">펀딩 진행률</span>
+                    <span className={`font-bold text-lg ${mockProperty.fundingProgress === 100 ? 'text-green-600' : 'text-blue-600'}`}>
+                      {mockProperty.fundingProgress}%
+                    </span>
+                  </div>
+                </div>
+                
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
+                  onClick={handleRentApplication}
+                >
+                  임대 신청하기
+                </Button>
+                
+                <div className="text-xs text-gray-500 text-center">
+                  * 펀딩 완료 후 월세가 자동으로 납부됩니다.
                 </div>
               </CardContent>
             </Card>

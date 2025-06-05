@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { User, Plus } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <div 
             className="flex items-center cursor-pointer" 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
           >
             <h1 className="text-xl font-bold text-blue-600">RealEstate Invest</h1>
           </div>
@@ -21,9 +21,17 @@ const Header = () => {
           <nav className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/home')}
             >
               매물 보기
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/property/register')}
+              className="flex items-center gap-2"
+            >
+              <Plus size={16} />
+              매물 등록
             </Button>
             <Button 
               variant="ghost" 
@@ -35,7 +43,7 @@ const Header = () => {
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/intro')}
             >
               로그아웃
             </Button>
