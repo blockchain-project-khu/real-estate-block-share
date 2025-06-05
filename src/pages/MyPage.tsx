@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from '@/hooks/use-toast';
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import { ArrowDown, ArrowUp, Edit } from 'lucide-react';
 
 const MyPage = () => {
+  const navigate = useNavigate();
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
 
   const formatPrice = (price: number) => {
@@ -30,7 +31,9 @@ const MyPage = () => {
       monthlyReturn: 12.5,
       totalReturn: 150,
       investmentDate: '2024-01-15',
-      status: '수익 발생 중'
+      status: '수익 발생 중',
+      totalFundingProgress: 100,
+      isEarning: true
     },
     {
       id: 'invest2',
@@ -41,7 +44,9 @@ const MyPage = () => {
       monthlyReturn: 40,
       totalReturn: 200,
       investmentDate: '2024-02-20',
-      status: '수익 발생 중'
+      status: '펀딩 진행 중',
+      totalFundingProgress: 75,
+      isEarning: false
     }
   ];
 
@@ -56,6 +61,17 @@ const MyPage = () => {
       monthlyRent: 500,
       registrationDate: '2024-03-01',
       status: '펀딩 진행 중'
+    },
+    {
+      id: 'sale2',
+      propertyName: '여의도 프리미엄 오피스',
+      location: '서울 영등포구 여의도동',
+      totalPrice: 200000,
+      currentFunding: 100,
+      totalInvestors: 20,
+      monthlyRent: 800,
+      registrationDate: '2024-02-15',
+      status: '펀딩 완료'
     }
   ];
 
@@ -70,10 +86,29 @@ const MyPage = () => {
     }
   ];
 
+  const handleEditInvestment = (investment: any) => {
+    navigate(`/property/${investment.id}/invest`, {
+      state: {
+        percentage: investment.investmentRatio,
+        investmentAmount: investment.investmentAmount,
+        monthlyReturn: investment.monthlyReturn,
+        propertyName: investment.propertyName,
+        isEdit: true
+      }
+    });
+  };
+
   const handleRentPayment = (rentId: string) => {
     toast({
       title: "월세 납부 완료",
       description: "월세가 성공적으로 납부되었습니다.",
+    });
+  };
+
+  const handleStatusChange = (saleId: string, newStatus: string) => {
+    toast({
+      title: "매물 상태 변경 완료",
+      description: `매물 상태가 "${newStatus}"로 변경되었습니다.`,
     });
   };
 
@@ -94,7 +129,7 @@ const MyPage = () => {
             <TabsTrigger value="rents">월세 납부</TabsTrigger>
           </TabsList>
 
-          {/* 펀딩 현황 */}
+          {/* 펀딩 현황 - 업데이트됨 */}
           <TabsContent value="investments" className="space-y-4">
             <Card>
               <CardHeader>
@@ -114,9 +149,14 @@ const MyPage = () => {
                             <div className="text-left">
                               <h3 className="font-semibold">{investment.propertyName}</h3>
                               <p className="text-sm text-gray-600">{investment.location}</p>
-                              <Badge className="mt-1 bg-green-100 text-green-800">
-                                {investment.status}
-                              </Badge>
+                              <div className="flex gap-2 mt-1">
+                                <Badge className={investment.isEarning ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
+                                  {investment.status}
+                                </Badge>
+                                <Badge variant="outline">
+                                  전체 {investment.totalFundingProgress}%
+                                </Badge>
+                              </div>
                             </div>
                             <div className="text-right flex items-center gap-4">
                               <div>
@@ -133,24 +173,55 @@ const MyPage = () => {
                     <CollapsibleContent>
                       <Card className="mt-2 bg-gray-50">
                         <CardContent className="p-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                             <div>
                               <span className="text-gray-600">투자일</span>
                               <p className="font-semibold">{investment.investmentDate}</p>
                             </div>
                             <div>
                               <span className="text-gray-600">월 수익</span>
-                              <p className="font-semibold text-green-600">{formatPrice(investment.monthlyReturn)}만원</p>
+                              <p className={`font-semibold ${investment.isEarning ? 'text-green-600' : 'text-gray-400'}`}>
+                                {formatPrice(investment.monthlyReturn)}만원
+                              </p>
                             </div>
                             <div>
                               <span className="text-gray-600">누적 수익</span>
-                              <p className="font-semibold text-blue-600">{formatPrice(investment.totalReturn)}만원</p>
+                              <p className={`font-semibold ${investment.isEarning ? 'text-blue-600' : 'text-gray-400'}`}>
+                                {formatPrice(investment.totalReturn)}만원
+                              </p>
                             </div>
                             <div>
-                              <span className="text-gray-600">투자 비율</span>
-                              <p className="font-semibold">{investment.investmentRatio}%</p>
+                              <span className="text-gray-600">수익 발생 여부</span>
+                              <p className={`font-semibold ${investment.isEarning ? 'text-green-600' : 'text-red-600'}`}>
+                                {investment.isEarning ? '발생 중' : '대기 중'}
+                              </p>
                             </div>
                           </div>
+                          
+                          <div className="mb-4">
+                            <div className="flex justify-between mb-2">
+                              <span className="text-sm text-gray-600">전체 펀딩 진행률</span>
+                              <span className="text-sm font-semibold">{investment.totalFundingProgress}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${investment.totalFundingProgress === 100 ? 'bg-green-600' : 'bg-blue-600'}`}
+                                style={{ width: `${investment.totalFundingProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                          
+                          {investment.totalFundingProgress < 100 && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditInvestment(investment)}
+                              className="flex items-center gap-2"
+                            >
+                              <Edit size={14} />
+                              펀딩 비율 수정
+                            </Button>
+                          )}
                         </CardContent>
                       </Card>
                     </CollapsibleContent>
@@ -160,7 +231,7 @@ const MyPage = () => {
             </Card>
           </TabsContent>
 
-          {/* 판매 현황 */}
+          {/* 판매 현황 - 업데이트됨 */}
           <TabsContent value="sales" className="space-y-4">
             <Card>
               <CardHeader>
@@ -180,7 +251,7 @@ const MyPage = () => {
                             <div className="text-left">
                               <h3 className="font-semibold">{sale.propertyName}</h3>
                               <p className="text-sm text-gray-600">{sale.location}</p>
-                              <Badge className="mt-1 bg-blue-100 text-blue-800">
+                              <Badge className={sale.currentFunding === 100 ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}>
                                 {sale.status}
                               </Badge>
                             </div>
@@ -199,7 +270,7 @@ const MyPage = () => {
                     <CollapsibleContent>
                       <Card className="mt-2 bg-gray-50">
                         <CardContent className="p-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                             <div>
                               <span className="text-gray-600">등록일</span>
                               <p className="font-semibold">{sale.registrationDate}</p>
@@ -216,12 +287,22 @@ const MyPage = () => {
                               <span className="text-gray-600">펀딩 진행률</span>
                               <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                 <div 
-                                  className="bg-blue-600 h-2 rounded-full"
+                                  className={`h-2 rounded-full ${sale.currentFunding === 100 ? 'bg-green-600' : 'bg-blue-600'}`}
                                   style={{ width: `${sale.currentFunding}%` }}
                                 />
                               </div>
                             </div>
                           </div>
+                          
+                          {sale.currentFunding === 100 && sale.status !== '펀딩 완료' && (
+                            <Button 
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => handleStatusChange(sale.id, '펀딩 완료')}
+                            >
+                              펀딩 완료로 상태 변경
+                            </Button>
+                          )}
                         </CardContent>
                       </Card>
                     </CollapsibleContent>

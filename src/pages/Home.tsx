@@ -4,10 +4,12 @@ import Header from '@/components/Header';
 import PropertyCard from '@/components/PropertyCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
+  const [showFundingCompleted, setShowFundingCompleted] = useState(false);
 
   const mockProperties = [
     {
@@ -26,7 +28,7 @@ const Home = () => {
       location: "서울 마포구 홍익로",
       price: 80000,
       monthlyRent: 400,
-      fundingProgress: 45,
+      fundingProgress: 100,
       imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop",
       propertyType: "상가"
     },
@@ -66,16 +68,20 @@ const Home = () => {
       location: "부산 해운대구 중동",
       price: 95000,
       monthlyRent: 350,
-      fundingProgress: 15,
+      fundingProgress: 100,
       imageUrl: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
       propertyType: "펜션"
     }
   ];
 
-  const filteredProperties = mockProperties.filter(property =>
-    property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProperties = mockProperties.filter(property => {
+    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFundingFilter = showFundingCompleted ? property.fundingProgress === 100 : true;
+    
+    return matchesSearch && matchesFundingFilter;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -87,27 +93,43 @@ const Home = () => {
           <p className="text-gray-600">블록체인 기반으로 안전하게 공동투자하세요</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="flex-1">
-            <Input
-              placeholder="매물명 또는 지역으로 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="매물명 또는 지역으로 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="w-full sm:w-48">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="정렬 기준" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">최신순</SelectItem>
+                  <SelectItem value="price-low">가격 낮은순</SelectItem>
+                  <SelectItem value="price-high">가격 높은순</SelectItem>
+                  <SelectItem value="funding">펀딩률 높은순</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="w-full sm:w-48">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="정렬 기준" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">최신순</SelectItem>
-                <SelectItem value="price-low">가격 낮은순</SelectItem>
-                <SelectItem value="price-high">가격 높은순</SelectItem>
-                <SelectItem value="funding">펀딩률 높은순</SelectItem>
-              </SelectContent>
-            </Select>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="funding-completed" 
+              checked={showFundingCompleted}
+              onCheckedChange={setShowFundingCompleted}
+            />
+            <label 
+              htmlFor="funding-completed" 
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              펀딩 완료된 매물만 보기
+            </label>
           </div>
         </div>
         

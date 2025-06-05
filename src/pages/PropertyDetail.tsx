@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -46,9 +45,14 @@ const PropertyDetail = () => {
 
   const handleInvestment = () => {
     const { investmentAmount, monthlyReturn, percentage } = calculateInvestment();
-    toast({
-      title: "투자 신청 완료",
-      description: `${percentage}% (${formatPrice(investmentAmount)}만원) 투자가 신청되었습니다.`,
+    navigate(`/property/${id}/invest`, {
+      state: {
+        percentage,
+        investmentAmount,
+        monthlyReturn,
+        propertyName: mockProperty.title,
+        isEdit: false
+      }
     });
   };
 
