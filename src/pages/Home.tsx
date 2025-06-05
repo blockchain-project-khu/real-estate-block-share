@@ -122,7 +122,7 @@ const Home = () => {
             <Checkbox 
               id="funding-completed" 
               checked={showFundingCompleted}
-              onCheckedChange={setShowFundingCompleted}
+              onCheckedChange={(checked) => setShowFundingCompleted(checked === true)}
             />
             <label 
               htmlFor="funding-completed" 
