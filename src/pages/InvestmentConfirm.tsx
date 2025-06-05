@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
 
@@ -15,10 +17,31 @@ const InvestmentConfirm = () => {
   const location = useLocation();
   const [isConfirming, setIsConfirming] = useState(false);
   
-  const { percentage, investmentAmount, monthlyReturn, propertyName, isEdit = false } = location.state || {};
+  const { percentage: initialPercentage, investmentAmount: initialInvestmentAmount, monthlyReturn: initialMonthlyReturn, propertyName, isEdit = false } = location.state || {};
+  
+  // 수정 시에만 사용할 상태
+  const [editablePercentage, setEditablePercentage] = useState(initialPercentage || 5);
+  
+  // 현재 사용할 값들 (수정 모드일 때는 editablePercentage 사용)
+  const currentPercentage = isEdit ? editablePercentage : initialPercentage;
+  
+  // 매물 기본 정보 (실제로는 API에서 가져와야 함)
+  const propertyBasePrice = 50000; // 5억원
+  const monthlyRentTotal = 250; // 250만원
+  
+  // 계산된 값들
+  const calculatedInvestmentAmount = (propertyBasePrice * currentPercentage) / 100;
+  const calculatedMonthlyReturn = (monthlyRentTotal * currentPercentage) / 100;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price);
+  };
+
+  const handlePercentageChange = (value: string) => {
+    const numValue = parseInt(value);
+    if (numValue >= 5 && numValue <= 100 && numValue % 5 === 0) {
+      setEditablePercentage(numValue);
+    }
   };
 
   const handleConfirm = async () => {
@@ -28,14 +51,14 @@ const InvestmentConfirm = () => {
     setTimeout(() => {
       toast({
         title: isEdit ? "투자 비율 수정 완료" : "투자 신청 완료",
-        description: `${percentage}% (${formatPrice(investmentAmount)}만원) ${isEdit ? '수정이' : '투자가'} 완료되었습니다.`,
+        description: `${currentPercentage}% (${formatPrice(calculatedInvestmentAmount)}만원) ${isEdit ? '수정이' : '투자가'} 완료되었습니다.`,
       });
       setIsConfirming(false);
       navigate('/mypage');
     }, 2000);
   };
 
-  if (!percentage || !investmentAmount) {
+  if ((!initialPercentage || !initialInvestmentAmount) && !isEdit) {
     navigate(-1);
     return null;
   }
@@ -57,10 +80,10 @@ const InvestmentConfirm = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">
-              {isEdit ? '투자 비율 수정 확인' : '투자 확인'}
+              {isEdit ? '투자 비율 수정' : '투자 확인'}
             </CardTitle>
             <CardDescription className="text-center">
-              아래 내용을 확인하고 {isEdit ? '수정을' : '투자를'} 진행해주세요
+              {isEdit ? '투자 비율을 수정하고 확인해주세요' : '아래 내용을 확인하고 투자를 진행해주세요'}
             </CardDescription>
           </CardHeader>
           
@@ -72,20 +95,43 @@ const InvestmentConfirm = () => {
             
             <Separator />
             
+            {isEdit && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="percentage">투자 비율 수정</Label>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Input
+                      id="percentage"
+                      type="number"
+                      min="5"
+                      max="100"
+                      step="5"
+                      value={editablePercentage}
+                      onChange={(e) => handlePercentageChange(e.target.value)}
+                      className="w-24"
+                    />
+                    <span className="text-lg font-semibold">%</span>
+                    <span className="text-sm text-gray-600">(5% 단위로 설정 가능)</span>
+                  </div>
+                </div>
+                <Separator />
+              </div>
+            )}
+            
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">투자 비율</span>
-                <span className="text-2xl font-bold text-blue-600">{percentage}%</span>
+                <span className="text-2xl font-bold text-blue-600">{currentPercentage}%</span>
               </div>
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">투자 금액</span>
-                <span className="text-xl font-bold">{formatPrice(investmentAmount)}만원</span>
+                <span className="text-xl font-bold">{formatPrice(calculatedInvestmentAmount)}만원</span>
               </div>
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">월 예상 수익</span>
-                <span className="text-xl font-bold text-green-600">{formatPrice(monthlyReturn)}만원</span>
+                <span className="text-xl font-bold text-green-600">{formatPrice(calculatedMonthlyReturn)}만원</span>
               </div>
             </div>
             
