@@ -57,8 +57,17 @@ const MyPage = () => {
         // 월세 납부 현황 조회 (매물별)
         console.log('MyPage: 월세 납부 현황 조회 중...');
         const paymentStatusData = await rentApi.getPropertyPaymentStatus();
-        console.log('MyPage: 월세 납부 현황 응답:', paymentStatusData);
-        setPaymentStatus(paymentStatusData || []);
+        console.log('MyPage: 월세 납부 현황 API 응답 원본:', paymentStatusData);
+        console.log('MyPage: paymentStatusData type:', typeof paymentStatusData);
+        console.log('MyPage: paymentStatusData isArray:', Array.isArray(paymentStatusData));
+        
+        if (paymentStatusData && Array.isArray(paymentStatusData)) {
+          console.log('MyPage: 배열 형태의 응답, 길이:', paymentStatusData.length);
+          setPaymentStatus(paymentStatusData);
+        } else {
+          console.log('MyPage: 배열이 아닌 응답이거나 null, 빈 배열로 설정');
+          setPaymentStatus([]);
+        }
         
         console.log('MyPage: 데이터 로딩 완료');
         
@@ -80,6 +89,12 @@ const MyPage = () => {
 
     loadData();
   }, []);
+
+  // 추가 디버깅을 위한 useEffect
+  useEffect(() => {
+    console.log('MyPage: paymentStatus 상태 변경됨:', paymentStatus);
+    console.log('MyPage: paymentStatus 길이:', paymentStatus.length);
+  }, [paymentStatus]);
 
   const formatPrice = (price: number | string) => {
     const numPrice = typeof price === 'string' ? parseInt(price) : price;
@@ -307,6 +322,16 @@ const MyPage = () => {
                 <CardDescription>매물별 월세 납부 현황을 확인하고 월세를 납부하세요</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* 디버깅 정보 표시 */}
+                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>디버깅 정보:</strong><br/>
+                    paymentStatus 배열 길이: {paymentStatus.length}<br/>
+                    paymentStatus 타입: {typeof paymentStatus}<br/>
+                    배열 여부: {Array.isArray(paymentStatus) ? 'true' : 'false'}
+                  </p>
+                </div>
+
                 {paymentStatus.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     월세 납부 내역이 없습니다.
