@@ -1,3 +1,4 @@
+
 export interface LoginRequest {
   username: string;
   password: string;
@@ -108,4 +109,66 @@ export interface FundingCreateApiResponse {
   code: string;
   message: string;
   response: number; // fundingId
+}
+
+// 임대 관련 타입들
+export interface RentRequest {
+  userId: number;
+  propertyId: number;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  paymentDay: number;
+}
+
+export interface RentResponse {
+  rentId: number;
+  userId: number;
+  username: string;
+  propertyId: number;
+  propertyOwnerId: number;
+  propertyOwnerName: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  status: string;
+  paymentDay: number;
+}
+
+export interface RentApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: RentResponse;
+}
+
+export interface RentListApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: RentResponse[];
+}
+
+export interface RentPaymentRequest {
+  rentId: number;
+  amount: number;
+}
+
+export interface RentPaymentResponse {
+  paymentId: number;
+  rentId: number;
+  tenantId: number;
+  propertyId: number;
+  amount: number;
+  paidAt: number[];
+  status: string;
+}
+
+export interface RentPaymentApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: RentPaymentResponse;
 }

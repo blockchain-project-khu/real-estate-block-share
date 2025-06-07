@@ -1,4 +1,5 @@
-import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse } from './types';
+
+import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, RentRequest, RentResponse, RentApiResponse, RentListApiResponse, RentPaymentRequest, RentPaymentApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
 
@@ -200,6 +201,34 @@ class ApiClient {
     console.log('API Client: getPropertyFundings 호출, propertyId:', propertyId);
     const response = await this.makeRequest<FundingListApiResponse>(`/fundings/property/${propertyId}`);
     console.log('API Client: getPropertyFundings 응답:', response);
+    return response.response;
+  }
+
+  // 임대 관련 메서드들
+  async createRent(rentData: RentRequest): Promise<RentResponse> {
+    console.log('API Client: createRent 호출, rentData:', rentData);
+    const response = await this.makeRequest<RentApiResponse>('/rents', {
+      method: 'POST',
+      body: JSON.stringify(rentData),
+    });
+    console.log('API Client: createRent 응답:', response);
+    return response.response;
+  }
+
+  async getMyRents(): Promise<RentResponse[]> {
+    console.log('API Client: getMyRents 호출');
+    const response = await this.makeRequest<RentListApiResponse>('/rents/me');
+    console.log('API Client: getMyRents 응답:', response);
+    return response.response;
+  }
+
+  async payRent(paymentData: RentPaymentRequest): Promise<RentPaymentResponse> {
+    console.log('API Client: payRent 호출, paymentData:', paymentData);
+    const response = await this.makeRequest<RentPaymentApiResponse>('/rent-payment', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+    console.log('API Client: payRent 응답:', response);
     return response.response;
   }
 }

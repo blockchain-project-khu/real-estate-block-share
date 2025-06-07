@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
+import { rentApi } from '@/api';
 
 const RentConfirm = () => {
   const { id } = useParams();
@@ -22,17 +23,55 @@ const RentConfirm = () => {
   };
 
   const handleConfirm = async () => {
+    if (!id) {
+      toast({
+        title: "오류",
+        description: "매물 정보가 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsConfirming(true);
     
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
+    try {
+      // 임대 계약 생성을 위한 데이터 준비
+      const currentUserId = 2; // 실제로는 로그인한 사용자 ID를 가져와야 함
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setFullYear(startDate.getFullYear() + 1); // 1년 계약
+      
+      const rentData = {
+        userId: currentUserId,
+        propertyId: parseInt(id),
+        startDate: startDate.toISOString().split('T')[0], // YYYY-MM-DD 형식
+        endDate: endDate.toISOString().split('T')[0],
+        monthlyRent: monthlyRent,
+        deposit: monthlyRent * 10, // 보증금은 월세의 10배로 설정
+        paymentDay: 5 // 매월 5일 납부
+      };
+
+      console.log('RentConfirm: 임대 계약 생성 요청:', rentData);
+      
+      const rentResponse = await rentApi.create(rentData);
+      console.log('RentConfirm: 임대 계약 생성 완료:', rentResponse);
+      
       toast({
         title: "임대 신청 완료",
         description: `${propertyName} 임대 신청이 완료되었습니다. ${fundingProgress === 100 ? '펀딩이 완료된 매물이므로 자동 월세 납부가 시작됩니다.' : '펀딩 완료 후 월세 납부가 시작됩니다.'}`,
       });
-      setIsConfirming(false);
+      
       navigate('/mypage');
-    }, 2000);
+    } catch (error) {
+      console.error('RentConfirm: 임대 신청 실패:', error);
+      toast({
+        title: "임대 신청 실패",
+        description: "임대 신청 중 오류가 발생했습니다. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   if (!propertyName || !monthlyRent) {
@@ -73,7 +112,12 @@ const RentConfirm = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">월 임대료</span>
-                <span className="text-2xl font-bold text-green-600">{formatPrice(monthlyRent)}만원</span>
+                <span className="text-2xl font-bold text-green-600">{formatPrice(monthlyRent)}원</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">보증금</span>
+                <span className="text-xl font-bold">{formatPrice(monthlyRent * 10)}원</span>
               </div>
               
               <div className="flex justify-between items-center">
@@ -81,6 +125,16 @@ const RentConfirm = () => {
                 <span className={`text-xl font-bold ${fundingProgress === 100 ? 'text-green-600' : 'text-blue-600'}`}>
                   {fundingProgress}%
                 </span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">계약 기간</span>
+                <span className="text-lg font-bold">1년</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">월세 납부일</span>
+                <span className="text-lg font-bold">매월 5일</span>
               </div>
               
               <div className="flex justify-between items-center">
@@ -98,8 +152,9 @@ const RentConfirm = () => {
               <ul className="text-sm text-gray-700 space-y-1">
                 <li>• 펀딩이 100% 완료되어야 임대가 시작됩니다</li>
                 <li>• 펀딩 완료일부터 매월 자동으로 월세가 납부됩니다</li>
-                <li>• 임대 기간은 최소 1년 이상입니다</li>
-                <li>• 월세는 매월 같은 날짜에 자동 결제됩니다</li>
+                <li>• 임대 기간은 1년입니다</li>
+                <li>• 월세는 매월 5일에 자동 결제됩니다</li>
+                <li>• 보증금은 월세의 10배로 책정됩니다</li>
               </ul>
             </div>
             
