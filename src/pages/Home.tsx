@@ -1,87 +1,77 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import PropertyCard from '@/components/PropertyCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from '@/hooks/use-toast';
+import { propertyApi } from '@/api';
+import { PropertyResponse } from '@/api/types';
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
   const [showFundingCompleted, setShowFundingCompleted] = useState(false);
+  const [properties, setProperties] = useState<PropertyResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const mockProperties = [
-    {
-      id: 1,
-      title: "강남구 신축 오피스텔",
-      location: "서울 강남구 역삼동",
-      price: 50000,
-      monthlyRent: 250,
-      fundingProgress: 75,
-      imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      propertyType: "오피스텔"
-    },
-    {
-      id: 2,
-      title: "홍대 상가 건물",
-      location: "서울 마포구 홍익로",
-      price: 80000,
-      monthlyRent: 400,
-      fundingProgress: 100,
-      imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop",
-      propertyType: "상가"
-    },
-    {
-      id: 3,
-      title: "판교 신축 아파트",
-      location: "경기 성남시 분당구",
-      price: 120000,
-      monthlyRent: 500,
-      fundingProgress: 90,
-      imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-      propertyType: "아파트"
-    },
-    {
-      id: 4,
-      title: "여의도 프리미엄 오피스",
-      location: "서울 영등포구 여의도동",
-      price: 200000,
-      monthlyRent: 800,
-      fundingProgress: 30,
-      imageUrl: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400&h=300&fit=crop",
-      propertyType: "오피스"
-    },
-    {
-      id: 5,
-      title: "송파구 투룸 원룸",
-      location: "서울 송파구 잠실동",
-      price: 35000,
-      monthlyRent: 180,
-      fundingProgress: 60,
-      imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
-      propertyType: "원룸"
-    },
-    {
-      id: 6,
-      title: "부산 해운대 펜션",
-      location: "부산 해운대구 중동",
-      price: 95000,
-      monthlyRent: 350,
-      fundingProgress: 100,
-      imageUrl: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      propertyType: "펜션"
-    }
+  const mockImages = [
+    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400&h=300&fit=crop",
+    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"
   ];
 
-  const filteredProperties = mockProperties.filter(property => {
-    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
+  const propertyTypes = ["오피스텔", "아파트", "상가", "오피스", "원룸", "펜션"];
+
+  useEffect(() => {
+    const loadProperties = async () => {
+      try {
+        const apiProperties = await propertyApi.getAll();
+        const propertiesWithMockData = apiProperties.map((property, index) => ({
+          ...property,
+          imageUrl: mockImages[index % mockImages.length],
+          propertyType: propertyTypes[index % propertyTypes.length],
+          monthlyRent: Math.floor(parseInt(property.price) * 0.005), // 가격의 0.5%를 월세로 설정
+          fundingProgress: Math.floor(Math.random() * 100) + 1 // 1-100% 랜덤 펀딩률
+        }));
+        setProperties(propertiesWithMockData);
+      } catch (error) {
+        console.error('Failed to load properties:', error);
+        toast({
+          title: "매물 로딩 실패",
+          description: "매물 목록을 불러오는데 실패했습니다.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProperties();
+  }, []);
+
+  const filteredProperties = properties.filter(property => {
+    const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.address.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesFundingFilter = showFundingCompleted ? property.fundingProgress === 100 : true;
     
     return matchesSearch && matchesFundingFilter;
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">매물 목록을 불러오는 중...</div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -135,7 +125,17 @@ const Home = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProperties.map(property => (
-            <PropertyCard key={property.id} {...property} />
+            <PropertyCard 
+              key={property.id} 
+              id={property.id}
+              title={property.name}
+              location={property.address}
+              price={parseInt(property.price)}
+              monthlyRent={property.monthlyRent}
+              fundingProgress={property.fundingProgress}
+              imageUrl={property.imageUrl}
+              propertyType={property.propertyType}
+            />
           ))}
         </div>
       </main>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,62 +9,119 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
+import { propertyApi } from '@/api';
+import { PropertyResponse } from '@/api/types';
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [fundingPercentage, setFundingPercentage] = useState([5]);
+  const [property, setProperty] = useState<PropertyResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const mockProperty = {
-    id: 1,
-    title: "강남구 신축 오피스텔",
-    location: "서울 강남구 역삼동 123-45",
-    price: 50000,
-    monthlyRent: 250,
-    fundingProgress: 75,
-    imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
-    propertyType: "오피스텔",
-    description: "강남 중심가에 위치한 신축 오피스텔입니다. 교통이 편리하고 상권이 발달되어 있어 임대 수요가 높습니다.",
-    totalArea: "84.2㎡",
-    floor: "15층 중 12층",
-    buildingAge: "신축",
-    facilities: ["엘리베이터", "주차장", "보안시설", "관리사무소"],
-    expectedYield: 6.0
-  };
+  const mockImages = [
+    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"
+  ];
+
+  const propertyTypes = ["오피스텔", "아파트", "상가", "오피스", "원룸", "펜션"];
+
+  useEffect(() => {
+    const loadProperty = async () => {
+      if (!id) return;
+      
+      try {
+        const apiProperty = await propertyApi.getById(parseInt(id));
+        const propertyWithMockData = {
+          ...apiProperty,
+          imageUrl: mockImages[apiProperty.id % mockImages.length],
+          propertyType: propertyTypes[apiProperty.id % propertyTypes.length],
+          monthlyRent: Math.floor(parseInt(apiProperty.price) * 0.005),
+          fundingProgress: Math.floor(Math.random() * 100) + 1,
+          totalArea: "84.2㎡",
+          floor: "15층 중 12층",
+          buildingAge: "신축",
+          facilities: ["엘리베이터", "주차장", "보안시설", "관리사무소"],
+          expectedYield: 6.0
+        };
+        setProperty(propertyWithMockData);
+      } catch (error) {
+        console.error('Failed to load property:', error);
+        toast({
+          title: "매물 로딩 실패",
+          description: "매물 정보를 불러오는데 실패했습니다.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProperty();
+  }, [id]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price);
   };
 
   const calculateInvestment = () => {
+    if (!property) return { investmentAmount: 0, monthlyReturn: 0, percentage: 0 };
+    
     const percentage = fundingPercentage[0];
-    const investmentAmount = (mockProperty.price * percentage) / 100;
-    const monthlyReturn = (mockProperty.monthlyRent * percentage) / 100;
+    const investmentAmount = (parseInt(property.price) * percentage) / 100;
+    const monthlyReturn = (property.monthlyRent * percentage) / 100;
     return { investmentAmount, monthlyReturn, percentage };
   };
 
   const handleInvestment = () => {
+    if (!property) return;
+    
     const { investmentAmount, monthlyReturn, percentage } = calculateInvestment();
     navigate(`/property/${id}/invest`, {
       state: {
         percentage,
         investmentAmount,
         monthlyReturn,
-        propertyName: mockProperty.title,
+        propertyName: property.name,
         isEdit: false
       }
     });
   };
 
   const handleRentApplication = () => {
+    if (!property) return;
+    
     navigate(`/property/${id}/rent`, {
       state: {
-        propertyName: mockProperty.title,
-        monthlyRent: mockProperty.monthlyRent,
-        fundingProgress: mockProperty.fundingProgress
+        propertyName: property.name,
+        monthlyRent: property.monthlyRent,
+        fundingProgress: property.fundingProgress
       }
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">매물 정보를 불러오는 중...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">매물을 찾을 수 없습니다.</div>
+        </main>
+      </div>
+    );
+  }
 
   const investment = calculateInvestment();
 
@@ -88,37 +145,37 @@ const PropertyDetail = () => {
             <Card>
               <div className="aspect-video relative overflow-hidden rounded-t-lg">
                 <img 
-                  src={mockProperty.imageUrl} 
-                  alt={mockProperty.title}
+                  src={property.imageUrl} 
+                  alt={property.name}
                   className="w-full h-full object-cover"
                 />
                 <Badge className="absolute top-4 left-4 bg-blue-600">
-                  {mockProperty.propertyType}
+                  {property.propertyType}
                 </Badge>
               </div>
               
               <CardHeader>
-                <CardTitle className="text-2xl">{mockProperty.title}</CardTitle>
-                <CardDescription className="text-lg">{mockProperty.location}</CardDescription>
+                <CardTitle className="text-2xl">{property.name}</CardTitle>
+                <CardDescription className="text-lg">{property.address}</CardDescription>
               </CardHeader>
               
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm text-gray-600">매물 가격</span>
-                    <p className="text-xl font-bold">{formatPrice(mockProperty.price)}만원</p>
+                    <p className="text-xl font-bold">{formatPrice(parseInt(property.price))}만원</p>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">월 임대수익</span>
-                    <p className="text-xl font-bold text-green-600">{formatPrice(mockProperty.monthlyRent)}만원</p>
+                    <p className="text-xl font-bold text-green-600">{formatPrice(property.monthlyRent)}만원</p>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">전용면적</span>
-                    <p className="text-lg font-semibold">{mockProperty.totalArea}</p>
+                    <p className="text-lg font-semibold">{property.totalArea}</p>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">층수</span>
-                    <p className="text-lg font-semibold">{mockProperty.floor}</p>
+                    <p className="text-lg font-semibold">{property.floor}</p>
                   </div>
                 </div>
                 
@@ -126,13 +183,13 @@ const PropertyDetail = () => {
                 
                 <div>
                   <h3 className="text-lg font-semibold mb-2">매물 설명</h3>
-                  <p className="text-gray-700">{mockProperty.description}</p>
+                  <p className="text-gray-700">{property.description}</p>
                 </div>
                 
                 <div>
                   <h3 className="text-lg font-semibold mb-2">부대시설</h3>
                   <div className="flex flex-wrap gap-2">
-                    {mockProperty.facilities.map((facility, index) => (
+                    {property.facilities.map((facility, index) => (
                       <Badge key={index} variant="secondary">{facility}</Badge>
                     ))}
                   </div>
@@ -143,12 +200,12 @@ const PropertyDetail = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>진행률</span>
-                      <span className="font-semibold">{mockProperty.fundingProgress}%</span>
+                      <span className="font-semibold">{property.fundingProgress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div 
                         className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                        style={{ width: `${mockProperty.fundingProgress}%` }}
+                        style={{ width: `${property.fundingProgress}%` }}
                       />
                     </div>
                   </div>
@@ -196,7 +253,7 @@ const PropertyDetail = () => {
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">예상 수익률</span>
-                    <span className="font-bold text-lg">{mockProperty.expectedYield}%</span>
+                    <span className="font-bold text-lg">{property.expectedYield}%</span>
                   </div>
                 </div>
                 
@@ -223,13 +280,13 @@ const PropertyDetail = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">월 임대료</span>
-                    <span className="font-bold text-lg">{formatPrice(mockProperty.monthlyRent)}만원</span>
+                    <span className="font-bold text-lg">{formatPrice(property.monthlyRent)}만원</span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">펀딩 진행률</span>
-                    <span className={`font-bold text-lg ${mockProperty.fundingProgress === 100 ? 'text-green-600' : 'text-blue-600'}`}>
-                      {mockProperty.fundingProgress}%
+                    <span className={`font-bold text-lg ${property.fundingProgress === 100 ? 'text-green-600' : 'text-blue-600'}`}>
+                      {property.fundingProgress}%
                     </span>
                   </div>
                 </div>

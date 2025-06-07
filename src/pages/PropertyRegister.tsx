@@ -6,23 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
+import { propertyApi } from '@/api';
 
 const PropertyRegister = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    location: '',
-    price: '',
-    monthlyRent: '',
-    propertyType: '',
+    name: '',
+    address: '',
     description: '',
-    totalArea: '',
-    floor: '',
-    imageUrl: ''
+    price: ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -33,25 +28,33 @@ const PropertyRegister = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // 입력 검증
-    if (!formData.title || !formData.location || !formData.price || !formData.monthlyRent || !formData.propertyType) {
+    if (!formData.name || !formData.address || !formData.price) {
       toast({
         title: "입력 오류",
         description: "필수 항목을 모두 입력해주세요.",
+        variant: "destructive",
       });
       setIsSubmitting(false);
       return;
     }
 
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
+    try {
+      await propertyApi.create(formData);
       toast({
         title: "매물 등록 완료",
-        description: `${formData.title} 매물이 성공적으로 등록되었습니다.`,
+        description: `${formData.name} 매물이 성공적으로 등록되었습니다.`,
       });
-      setIsSubmitting(false);
       navigate('/home');
-    }, 2000);
+    } catch (error) {
+      console.error('Property registration error:', error);
+      toast({
+        title: "매물 등록 실패",
+        description: "매물 등록 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -78,91 +81,32 @@ const PropertyRegister = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title">매물명 *</Label>
+                  <Label htmlFor="name">매물명 *</Label>
                   <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="예: 강남구 신축 오피스텔"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="location">위치 *</Label>
+                  <Label htmlFor="address">위치 *</Label>
                   <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
                     placeholder="예: 서울 강남구 역삼동"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="price">매물 가격 (만원) *</Label>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="price">매물 가격 *</Label>
                   <Input
                     id="price"
-                    type="number"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
-                    placeholder="50000"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyRent">월 임대료 (만원) *</Label>
-                  <Input
-                    id="monthlyRent"
-                    type="number"
-                    value={formData.monthlyRent}
-                    onChange={(e) => handleInputChange('monthlyRent', e.target.value)}
-                    placeholder="250"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="propertyType">매물 유형 *</Label>
-                  <Select value={formData.propertyType} onValueChange={(value) => handleInputChange('propertyType', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="매물 유형 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="오피스텔">오피스텔</SelectItem>
-                      <SelectItem value="아파트">아파트</SelectItem>
-                      <SelectItem value="상가">상가</SelectItem>
-                      <SelectItem value="오피스">오피스</SelectItem>
-                      <SelectItem value="원룸">원룸</SelectItem>
-                      <SelectItem value="펜션">펜션</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="totalArea">전용면적</Label>
-                  <Input
-                    id="totalArea"
-                    value={formData.totalArea}
-                    onChange={(e) => handleInputChange('totalArea', e.target.value)}
-                    placeholder="84.2㎡"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="floor">층수</Label>
-                  <Input
-                    id="floor"
-                    value={formData.floor}
-                    onChange={(e) => handleInputChange('floor', e.target.value)}
-                    placeholder="15층 중 12층"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="imageUrl">이미지 URL</Label>
-                  <Input
-                    id="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="50000만원"
                   />
                 </div>
               </div>

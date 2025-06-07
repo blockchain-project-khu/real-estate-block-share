@@ -1,5 +1,5 @@
 
-import { LoginRequest, RegisterRequest, LoginResponse } from './types';
+import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
 
@@ -57,7 +57,6 @@ class ApiClient {
           this.setTokens(newAccess);
         }
         
-        // refresh 토큰은 Set-Cookie로 받아서 자동으로 브라우저가 관리
         return true;
       }
       
@@ -95,12 +94,10 @@ class ApiClient {
     try {
       let response = await fetch(url, requestOptions);
 
-      // 401 에러 발생 시 토큰 재발급 시도
       if (response.status === 401 && requiresAuth) {
         const reissueSuccess = await this.reissueTokens();
         
         if (reissueSuccess) {
-          // 새로운 토큰으로 다시 요청
           const { access } = this.getStoredTokens();
           if (access) {
             headers.access = access;
@@ -111,7 +108,6 @@ class ApiClient {
             headers
           });
         } else {
-          // 토큰 재발급 실패 시 로그인 페이지로 리다이렉트
           this.clearTokens();
           window.location.href = '/login';
           throw new Error('Authentication failed');
@@ -122,7 +118,6 @@ class ApiClient {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // 로그인 성공 시 토큰 저장
       if (endpoint === '/login' && response.ok) {
         const access = response.headers.get('access');
         if (access) {
@@ -157,7 +152,21 @@ class ApiClient {
     this.clearTokens();
   }
 
-  // 향후 매물 관련 API 메소드들을 여기에 추가할 예정
+  // 매물 관련 API 메소드들
+  async createProperty(propertyData: PropertyRequest): Promise<PropertyResponse> {
+    return this.makeRequest<PropertyResponse>('/property', {
+      method: 'POST',
+      body: JSON.stringify(propertyData),
+    });
+  }
+
+  async getProperties(): Promise<PropertyResponse[]> {
+    return this.makeRequest<PropertyResponse[]>('/property');
+  }
+
+  async getPropertyById(propertyId: number): Promise<PropertyResponse> {
+    return this.makeRequest<PropertyResponse>(`/property/${propertyId}`);
+  }
 }
 
 export const apiClient = new ApiClient(BASE_URL);
