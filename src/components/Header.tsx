@@ -3,9 +3,28 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { User, Plus } from 'lucide-react';
+import { authApi } from '@/api';
+import { toast } from '@/hooks/use-toast';
 
 const Header = () => {
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+      toast({
+        title: "로그아웃 완료",
+        description: "성공적으로 로그아웃되었습니다.",
+      });
+      navigate('/intro');
+    } catch (error) {
+      toast({
+        title: "로그아웃 실패",
+        description: "오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -43,7 +62,7 @@ const Header = () => {
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => navigate('/intro')}
+              onClick={handleLogout}
             >
               로그아웃
             </Button>

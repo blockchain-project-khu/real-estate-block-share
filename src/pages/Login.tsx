@@ -6,23 +6,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { authApi } from '@/api';
 
 const Login = () => {
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [signupData, setSignupData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [loginData, setLoginData] = useState({ username: '', password: '' });
+  const [signupData, setSignupData] = useState({ username: '', password: '', confirmPassword: '' });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "로그인 성공",
-      description: "환영합니다!",
-    });
-    navigate('/');
+    setIsLoading(true);
+
+    try {
+      const response = await authApi.login({
+        username: loginData.username,
+        password: loginData.password
+      });
+
+      if (response.isSuccess) {
+        // userId 저장
+        localStorage.setItem('userId', response.response.userId.toString());
+        
+        toast({
+          title: "로그인 성공",
+          description: response.message,
+        });
+        navigate('/home');
+      } else {
+        toast({
+          title: "로그인 실패",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "로그인 실패",
+        description: "서버 연결에 실패했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (signupData.password !== signupData.confirmPassword) {
       toast({
         title: "회원가입 실패",
@@ -31,11 +62,31 @@ const Login = () => {
       });
       return;
     }
-    toast({
-      title: "회원가입 성공",
-      description: "계정이 생성되었습니다!",
-    });
-    navigate('/');
+
+    setIsLoading(true);
+
+    try {
+      await authApi.register({
+        username: signupData.username,
+        password: signupData.password
+      });
+
+      toast({
+        title: "회원가입 성공",
+        description: "계정이 생성되었습니다! 로그인해주세요.",
+      });
+      
+      // 회원가입 성공 후 로그인 탭으로 전환
+      setSignupData({ username: '', password: '', confirmPassword: '' });
+    } catch (error) {
+      toast({
+        title: "회원가입 실패",
+        description: "서버 연결에 실패했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,10 +107,10 @@ const Login = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Input
-                    type="email"
-                    placeholder="이메일"
-                    value={loginData.email}
-                    onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                    type="text"
+                    placeholder="사용자명"
+                    value={loginData.username}
+                    onChange={(e) => setLoginData({...loginData, username: e.target.value})}
                     required
                   />
                   <Input
@@ -70,8 +121,12 @@ const Login = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                  로그인
+                <Button 
+                  type="submit" 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? '로그인 중...' : '로그인'}
                 </Button>
               </form>
             </TabsContent>
@@ -81,16 +136,9 @@ const Login = () => {
                 <div className="space-y-2">
                   <Input
                     type="text"
-                    placeholder="이름"
-                    value={signupData.name}
-                    onChange={(e) => setSignupData({...signupData, name: e.target.value})}
-                    required
-                  />
-                  <Input
-                    type="email"
-                    placeholder="이메일"
-                    value={signupData.email}
-                    onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                    placeholder="사용자명"
+                    value={signupData.username}
+                    onChange={(e) => setSignupData({...signupData, username: e.target.value})}
                     required
                   />
                   <Input
@@ -108,8 +156,12 @@ const Login = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-                  회원가입
+                <Button 
+                  type="submit" 
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? '가입 중...' : '회원가입'}
                 </Button>
               </form>
             </TabsContent>
