@@ -1,4 +1,3 @@
-
 import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, RentRequest, RentResponse, RentApiResponse, RentListApiResponse, RentPaymentRequest, RentPaymentResponse, RentPaymentApiResponse, PropertyPaymentStatus, PropertyPaymentStatusApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
@@ -212,13 +211,6 @@ class ApiClient {
       body: JSON.stringify(rentData),
     });
     console.log('API Client: createRent 응답:', response);
-    return response.response;
-  }
-
-  async getMyRents(): Promise<RentResponse[]> {
-    console.log('API Client: getMyRents 호출');
-    const response = await this.makeRequest<RentListApiResponse>('/rents/me');
-    console.log('API Client: getMyRents 응답:', response);
     return response.response;
   }
 
