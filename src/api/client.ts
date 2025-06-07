@@ -227,9 +227,9 @@ class ApiClient {
   // 월세 납부 현황 조회 (매물별)
   async getPropertyPaymentStatus(): Promise<PropertyPaymentStatus[]> {
     console.log('API Client: getPropertyPaymentStatus 호출');
-    const response = await this.makeRequest<PropertyPaymentStatusApiResponse>('/rent-payment/sendBy-property');
+    const response = await this.makeRequest<PropertyPaymentStatus[]>('/rent-payment/sendBy-property');
     console.log('API Client: getPropertyPaymentStatus 응답:', response);
-    return response.response;
+    return response;
   }
 }
 
