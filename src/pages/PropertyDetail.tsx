@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -24,7 +25,14 @@ const PropertyDetail = () => {
     "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"
   ];
 
-  const propertyTypes = ["오피스텔", "아파트", "상가", "오피스", "원룸", "펜션"];
+  const propertyTypeMap: Record<string, string> = {
+    'OFFICETEL': '오피스텔',
+    'APARTMENT': '아파트',
+    'VILLA': '빌라',
+    'OFFICE': '오피스',
+    'STUDIO': '원룸',
+    'COMMERCIAL': '상가'
+  };
 
   useEffect(() => {
     const loadProperty = async () => {
@@ -34,12 +42,11 @@ const PropertyDetail = () => {
         const apiProperty = await propertyApi.getById(parseInt(id));
         const propertyWithMockData: PropertyWithMockData = {
           ...apiProperty,
-          imageUrl: mockImages[apiProperty.id % mockImages.length],
-          propertyType: propertyTypes[apiProperty.id % propertyTypes.length],
-          monthlyRent: Math.floor(parseInt(apiProperty.price) * 0.005),
-          fundingProgress: Math.floor(Math.random() * 100) + 1,
-          totalArea: "84.2㎡",
-          floor: "15층 중 12층",
+          imageUrl: apiProperty.imageUrl || mockImages[apiProperty.id % mockImages.length],
+          propertyType: propertyTypeMap[apiProperty.type] || apiProperty.type,
+          fundingProgress: apiProperty.currentFundingPercent,
+          totalArea: `${apiProperty.supplyArea}㎡`,
+          floor: `${apiProperty.totalFloors}층`,
           buildingAge: "신축",
           facilities: ["엘리베이터", "주차장", "보안시설", "관리사무소"],
           expectedYield: 6.0
@@ -162,18 +169,18 @@ const PropertyDetail = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm text-gray-600">매물 가격</span>
-                    <p className="text-xl font-bold">{formatPrice(parseInt(property.price))}만원</p>
+                    <p className="text-xl font-bold">{formatPrice(parseInt(property.price))}원</p>
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">월 임대수익</span>
-                    <p className="text-xl font-bold text-green-600">{formatPrice(property.monthlyRent)}만원</p>
+                    <p className="text-xl font-bold text-green-600">{formatPrice(property.monthlyRent)}원</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">전용면적</span>
+                    <span className="text-sm text-gray-600">공급면적</span>
                     <p className="text-lg font-semibold">{property.totalArea}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">층수</span>
+                    <span className="text-sm text-gray-600">총 층수</span>
                     <p className="text-lg font-semibold">{property.floor}</p>
                   </div>
                 </div>
@@ -242,12 +249,12 @@ const PropertyDetail = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">투자 금액</span>
-                    <span className="font-bold text-lg">{formatPrice(investment.investmentAmount)}만원</span>
+                    <span className="font-bold text-lg">{formatPrice(investment.investmentAmount)}원</span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">월 예상 수익</span>
-                    <span className="font-bold text-lg text-green-600">{formatPrice(investment.monthlyReturn)}만원</span>
+                    <span className="font-bold text-lg text-green-600">{formatPrice(investment.monthlyReturn)}원</span>
                   </div>
                   
                   <div className="flex justify-between">
@@ -279,7 +286,7 @@ const PropertyDetail = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">월 임대료</span>
-                    <span className="font-bold text-lg">{formatPrice(property.monthlyRent)}만원</span>
+                    <span className="font-bold text-lg">{formatPrice(property.monthlyRent)}원</span>
                   </div>
                   
                   <div className="flex justify-between">

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
 import { propertyApi } from '@/api';
@@ -17,8 +18,22 @@ const PropertyRegister = () => {
     name: '',
     address: '',
     description: '',
-    price: ''
+    price: '',
+    monthlyRent: '',
+    supplyArea: '',
+    totalFloors: '',
+    imageUrl: '',
+    propertyType: ''
   });
+
+  const propertyTypes = [
+    { value: 'OFFICETEL', label: '오피스텔' },
+    { value: 'APARTMENT', label: '아파트' },
+    { value: 'VILLA', label: '빌라' },
+    { value: 'OFFICE', label: '오피스' },
+    { value: 'STUDIO', label: '원룸' },
+    { value: 'COMMERCIAL', label: '상가' }
+  ];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -28,7 +43,7 @@ const PropertyRegister = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!formData.name || !formData.address || !formData.price) {
+    if (!formData.name || !formData.address || !formData.price || !formData.propertyType) {
       toast({
         title: "입력 오류",
         description: "필수 항목을 모두 입력해주세요.",
@@ -39,7 +54,14 @@ const PropertyRegister = () => {
     }
 
     try {
-      await propertyApi.create(formData);
+      const requestData = {
+        ...formData,
+        monthlyRent: parseFloat(formData.monthlyRent) || 0,
+        supplyArea: parseFloat(formData.supplyArea) || 0,
+        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop'
+      };
+
+      await propertyApi.create(requestData);
       toast({
         title: "매물 등록 완료",
         description: `${formData.name} 매물이 성공적으로 등록되었습니다.`,
@@ -100,13 +122,73 @@ const PropertyRegister = () => {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="price">매물 가격 *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="propertyType">매물 유형 *</Label>
+                  <Select value={formData.propertyType} onValueChange={(value) => handleInputChange('propertyType', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="매물 유형을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {propertyTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price">매물 가격 (원) *</Label>
                   <Input
                     id="price"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
-                    placeholder="50000만원"
+                    placeholder="300000000"
+                    type="number"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="monthlyRent">월 임대료 (원)</Label>
+                  <Input
+                    id="monthlyRent"
+                    value={formData.monthlyRent}
+                    onChange={(e) => handleInputChange('monthlyRent', e.target.value)}
+                    placeholder="1000000"
+                    type="number"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="supplyArea">공급면적 (㎡)</Label>
+                  <Input
+                    id="supplyArea"
+                    value={formData.supplyArea}
+                    onChange={(e) => handleInputChange('supplyArea', e.target.value)}
+                    placeholder="28.5"
+                    type="number"
+                    step="0.1"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="totalFloors">총 층수</Label>
+                  <Input
+                    id="totalFloors"
+                    value={formData.totalFloors}
+                    onChange={(e) => handleInputChange('totalFloors', e.target.value)}
+                    placeholder="15"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="imageUrl">이미지 URL</Label>
+                  <Input
+                    id="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                    placeholder="https://example.com/image.jpg"
                   />
                 </div>
               </div>

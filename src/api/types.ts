@@ -23,6 +23,11 @@ export interface PropertyRequest {
   address: string;
   description: string;
   price: string;
+  monthlyRent: number;
+  supplyArea: number;
+  totalFloors: string;
+  imageUrl: string;
+  propertyType: string;
 }
 
 export interface PropertyResponse {
@@ -31,14 +36,33 @@ export interface PropertyResponse {
   name: string;
   address: string;
   description: string;
+  status: string;
+  type: string;
   price: string;
+  monthlyRent: number;
+  supplyArea: number;
+  totalFloors: string;
+  imageUrl: string;
+  currentFundingPercent: number;
 }
 
-// Extended type for UI usage with mock data
+export interface PropertyApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: PropertyResponse[];
+}
+
+export interface PropertyDetailApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: PropertyResponse;
+}
+
+// Extended type for UI usage with additional mock data
 export interface PropertyWithMockData extends PropertyResponse {
-  imageUrl: string;
   propertyType: string;
-  monthlyRent: number;
   fundingProgress: number;
   totalArea?: string;
   floor?: string;

@@ -24,7 +24,14 @@ const Home = () => {
     "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"
   ];
 
-  const propertyTypes = ["오피스텔", "아파트", "상가", "오피스", "원룸", "펜션"];
+  const propertyTypeMap: Record<string, string> = {
+    'OFFICETEL': '오피스텔',
+    'APARTMENT': '아파트',
+    'VILLA': '빌라',
+    'OFFICE': '오피스',
+    'STUDIO': '원룸',
+    'COMMERCIAL': '상가'
+  };
 
   useEffect(() => {
     const loadProperties = async () => {
@@ -32,10 +39,9 @@ const Home = () => {
         const apiProperties = await propertyApi.getAll();
         const propertiesWithMockData: PropertyWithMockData[] = apiProperties.map((property, index) => ({
           ...property,
-          imageUrl: mockImages[index % mockImages.length],
-          propertyType: propertyTypes[index % propertyTypes.length],
-          monthlyRent: Math.floor(parseInt(property.price) * 0.005), // 가격의 0.5%를 월세로 설정
-          fundingProgress: Math.floor(Math.random() * 100) + 1 // 1-100% 랜덤 펀딩률
+          imageUrl: property.imageUrl || mockImages[index % mockImages.length],
+          propertyType: propertyTypeMap[property.type] || property.type,
+          fundingProgress: property.currentFundingPercent
         }));
         setProperties(propertiesWithMockData);
       } catch (error) {

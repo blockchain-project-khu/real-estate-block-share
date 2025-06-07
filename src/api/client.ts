@@ -1,5 +1,5 @@
 
-import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse } from './types';
+import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
 
@@ -161,11 +161,13 @@ class ApiClient {
   }
 
   async getProperties(): Promise<PropertyResponse[]> {
-    return this.makeRequest<PropertyResponse[]>('/property');
+    const response = await this.makeRequest<PropertyApiResponse>('/property');
+    return response.response;
   }
 
   async getPropertyById(propertyId: number): Promise<PropertyResponse> {
-    return this.makeRequest<PropertyResponse>(`/property/${propertyId}`);
+    const response = await this.makeRequest<PropertyDetailApiResponse>(`/property/${propertyId}`);
+    return response.response;
   }
 }
 
