@@ -34,6 +34,19 @@ export interface PropertyResponse {
   price: string;
 }
 
+// Extended type for UI usage with mock data
+export interface PropertyWithMockData extends PropertyResponse {
+  imageUrl: string;
+  propertyType: string;
+  monthlyRent: number;
+  fundingProgress: number;
+  totalArea?: string;
+  floor?: string;
+  buildingAge?: string;
+  facilities?: string[];
+  expectedYield?: number;
+}
+
 export interface ApiResponse<T = any> {
   isSuccess: boolean;
   code: string;

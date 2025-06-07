@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,13 +9,13 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
 import { propertyApi } from '@/api';
-import { PropertyResponse } from '@/api/types';
+import { PropertyWithMockData } from '@/api/types';
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [fundingPercentage, setFundingPercentage] = useState([5]);
-  const [property, setProperty] = useState<PropertyResponse | null>(null);
+  const [property, setProperty] = useState<PropertyWithMockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const mockImages = [
@@ -33,7 +32,7 @@ const PropertyDetail = () => {
       
       try {
         const apiProperty = await propertyApi.getById(parseInt(id));
-        const propertyWithMockData = {
+        const propertyWithMockData: PropertyWithMockData = {
           ...apiProperty,
           imageUrl: mockImages[apiProperty.id % mockImages.length],
           propertyType: propertyTypes[apiProperty.id % propertyTypes.length],
@@ -189,7 +188,7 @@ const PropertyDetail = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">부대시설</h3>
                   <div className="flex flex-wrap gap-2">
-                    {property.facilities.map((facility, index) => (
+                    {property.facilities?.map((facility, index) => (
                       <Badge key={index} variant="secondary">{facility}</Badge>
                     ))}
                   </div>

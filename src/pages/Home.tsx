@@ -7,13 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { propertyApi } from '@/api';
-import { PropertyResponse } from '@/api/types';
+import { PropertyWithMockData } from '@/api/types';
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
   const [showFundingCompleted, setShowFundingCompleted] = useState(false);
-  const [properties, setProperties] = useState<PropertyResponse[]>([]);
+  const [properties, setProperties] = useState<PropertyWithMockData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const mockImages = [
@@ -30,7 +30,7 @@ const Home = () => {
     const loadProperties = async () => {
       try {
         const apiProperties = await propertyApi.getAll();
-        const propertiesWithMockData = apiProperties.map((property, index) => ({
+        const propertiesWithMockData: PropertyWithMockData[] = apiProperties.map((property, index) => ({
           ...property,
           imageUrl: mockImages[index % mockImages.length],
           propertyType: propertyTypes[index % propertyTypes.length],
