@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,11 +8,49 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from '@/hooks/use-toast';
 import { ArrowDown, ArrowUp, Edit } from 'lucide-react';
+import { fundingApi, propertyApi } from '@/api';
+import { FundingResponse, PropertyResponse } from '@/api/types';
 
 const MyPage = () => {
   const navigate = useNavigate();
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const [showCompletedRents, setShowCompletedRents] = useState(false);
+  const [myFundings, setMyFundings] = useState<FundingResponse[]>([]);
+  const [fundingProperties, setFundingProperties] = useState<Record<number, PropertyResponse>>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMyFundings = async () => {
+      try {
+        const fundings = await fundingApi.getMyFundings();
+        setMyFundings(fundings);
+        
+        // 각 펀딩에 대응하는 매물 정보도 가져오기
+        const propertyPromises = fundings.map(funding => 
+          propertyApi.getById(funding.propertyId)
+        );
+        const properties = await Promise.all(propertyPromises);
+        
+        const propertyMap: Record<number, PropertyResponse> = {};
+        properties.forEach(property => {
+          propertyMap[property.id] = property;
+        });
+        
+        setFundingProperties(propertyMap);
+      } catch (error) {
+        console.error('Failed to load my fundings:', error);
+        toast({
+          title: "펀딩 목록 로딩 실패",
+          description: "펀딩 목록을 불러오는데 실패했습니다.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMyFundings();
+  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price);
@@ -134,6 +172,17 @@ const MyPage = () => {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">펀딩 정보를 불러오는 중...</div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -151,7 +200,7 @@ const MyPage = () => {
             <TabsTrigger value="rents">월세 납부</TabsTrigger>
           </TabsList>
 
-          {/* 펀딩 현황 - 업데이트됨 */}
+          {/* 펀딩 현황 - 실제 API 데이터 사용 */}
           <TabsContent value="investments" className="space-y-4">
             <Card>
               <CardHeader>
@@ -159,96 +208,93 @@ const MyPage = () => {
                 <CardDescription>투자한 매물들의 현황을 확인하세요</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {mockInvestments.map((investment) => (
-                  <Collapsible key={investment.id}>
-                    <CollapsibleTrigger 
-                      className="w-full"
-                      onClick={() => toggleItem(investment.id)}
-                    >
-                      <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-center">
-                            <div className="text-left">
-                              <h3 className="font-semibold">{investment.propertyName}</h3>
-                              <p className="text-sm text-gray-600">{investment.location}</p>
-                              <div className="flex gap-2 mt-1">
-                                <Badge className={investment.isEarning ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
-                                  {investment.status}
-                                </Badge>
-                                <Badge variant="outline">
-                                  전체 {investment.totalFundingProgress}%
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="text-right flex items-center gap-4">
-                              <div>
-                                <p className="font-bold">{formatPrice(investment.investmentAmount)}만원</p>
-                                <p className="text-sm text-gray-600">{investment.investmentRatio}% 투자</p>
-                              </div>
-                              {openItems[investment.id] ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </CollapsibleTrigger>
+                {myFundings.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    참여한 펀딩이 없습니다.
+                  </div>
+                ) : (
+                  myFundings.map((funding) => {
+                    const property = fundingProperties[funding.propertyId];
+                    if (!property) return null;
                     
-                    <CollapsibleContent>
-                      <Card className="mt-2 bg-gray-50">
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                            <div>
-                              <span className="text-gray-600">투자일</span>
-                              <p className="font-semibold">{investment.investmentDate}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">월 수익</span>
-                              <p className={`font-semibold ${investment.isEarning ? 'text-green-600' : 'text-gray-400'}`}>
-                                {formatPrice(investment.monthlyReturn)}만원
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">누적 수익</span>
-                              <p className={`font-semibold ${investment.isEarning ? 'text-blue-600' : 'text-gray-400'}`}>
-                                {formatPrice(investment.totalReturn)}만원
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">수익 발생 여부</span>
-                              <p className={`font-semibold ${investment.isEarning ? 'text-green-600' : 'text-red-600'}`}>
-                                {investment.isEarning ? '발생 중' : '대기 중'}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-4">
-                            <div className="flex justify-between mb-2">
-                              <span className="text-sm text-gray-600">전체 펀딩 진행률</span>
-                              <span className="text-sm font-semibold">{investment.totalFundingProgress}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${investment.totalFundingProgress === 100 ? 'bg-green-600' : 'bg-blue-600'}`}
-                                style={{ width: `${investment.totalFundingProgress}%` }}
-                              />
-                            </div>
-                          </div>
-                          
-                          {investment.totalFundingProgress < 100 && (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditInvestment(investment)}
-                              className="flex items-center gap-2"
-                            >
-                              <Edit size={14} />
-                              펀딩 비율 수정
-                            </Button>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))}
+                    return (
+                      <Collapsible key={funding.fundingId}>
+                        <CollapsibleTrigger 
+                          className="w-full"
+                          onClick={() => toggleItem(funding.fundingId.toString())}
+                        >
+                          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-center">
+                                <div className="text-left">
+                                  <h3 className="font-semibold">{property.name}</h3>
+                                  <p className="text-sm text-gray-600">{property.address}</p>
+                                  <div className="flex gap-2 mt-1">
+                                    <Badge className={funding.status === 'APPROVED' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
+                                      {funding.status === 'APPROVED' ? '승인됨' : '대기 중'}
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      펀딩 {funding.amount}%
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="text-right flex items-center gap-4">
+                                  <div>
+                                    <p className="font-bold">{formatPrice((parseInt(property.price) * funding.amount) / 100)}원</p>
+                                    <p className="text-sm text-gray-600">{funding.amount}% 투자</p>
+                                  </div>
+                                  {openItems[funding.fundingId.toString()] ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent>
+                          <Card className="mt-2 bg-gray-50">
+                            <CardContent className="p-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                                <div>
+                                  <span className="text-gray-600">펀딩 ID</span>
+                                  <p className="font-semibold">{funding.fundingId}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">월 수익 예상</span>
+                                  <p className="font-semibold text-green-600">
+                                    {formatPrice((property.monthlyRent * funding.amount) / 100)}원
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">매물 상태</span>
+                                  <p className="font-semibold">{property.status}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">펀딩 상태</span>
+                                  <p className={`font-semibold ${funding.status === 'APPROVED' ? 'text-green-600' : 'text-yellow-600'}`}>
+                                    {funding.status === 'APPROVED' ? '승인됨' : '대기 중'}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="mb-4">
+                                <div className="flex justify-between mb-2">
+                                  <span className="text-sm text-gray-600">전체 펀딩 진행률</span>
+                                  <span className="text-sm font-semibold">{property.currentFundingPercent}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className={`h-2 rounded-full ${property.currentFundingPercent === 100 ? 'bg-green-600' : 'bg-blue-600'}`}
+                                    style={{ width: `${property.currentFundingPercent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
           </TabsContent>

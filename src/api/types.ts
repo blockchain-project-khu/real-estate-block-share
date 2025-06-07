@@ -1,4 +1,3 @@
-
 export interface LoginRequest {
   username: string;
   password: string;
@@ -76,4 +75,37 @@ export interface ApiResponse<T = any> {
   code: string;
   message: string;
   response?: T;
+}
+
+export interface FundingRequest {
+  propertyId: number;
+}
+
+export interface FundingResponse {
+  fundingId: number;
+  userId: number;
+  propertyId: number;
+  amount: number;
+  status: string;
+}
+
+export interface FundingApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: FundingResponse;
+}
+
+export interface FundingListApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: FundingResponse[];
+}
+
+export interface FundingCreateApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: number; // fundingId
 }

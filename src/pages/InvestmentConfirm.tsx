@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
+import { fundingApi } from '@/api';
 
 const InvestmentConfirm = () => {
   const { id } = useParams();
@@ -45,17 +45,40 @@ const InvestmentConfirm = () => {
   };
 
   const handleConfirm = async () => {
+    if (!id) return;
+    
     setIsConfirming(true);
     
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
-      toast({
-        title: isEdit ? "투자 비율 수정 완료" : "투자 신청 완료",
-        description: `${currentPercentage}% (${formatPrice(calculatedInvestmentAmount)}만원) ${isEdit ? '수정이' : '투자가'} 완료되었습니다.`,
-      });
-      setIsConfirming(false);
+    try {
+      if (!isEdit) {
+        // 실제 펀딩 등록 API 호출
+        const fundingId = await fundingApi.create(parseInt(id));
+        
+        toast({
+          title: "투자 신청 완료",
+          description: `${currentPercentage}% (${formatPrice(calculatedInvestmentAmount)}만원) 투자가 완료되었습니다.`,
+        });
+        
+        console.log('Created funding ID:', fundingId);
+      } else {
+        // 수정 로직 (기존 목업 유지)
+        toast({
+          title: "투자 비율 수정 완료",
+          description: `${currentPercentage}% (${formatPrice(calculatedInvestmentAmount)}만원) 수정이 완료되었습니다.`,
+        });
+      }
+      
       navigate('/mypage');
-    }, 2000);
+    } catch (error) {
+      console.error('Funding operation failed:', error);
+      toast({
+        title: isEdit ? "투자 비율 수정 실패" : "투자 신청 실패",
+        description: "다시 시도해주세요.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   if ((!initialPercentage || !initialInvestmentAmount) && !isEdit) {

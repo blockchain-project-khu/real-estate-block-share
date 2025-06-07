@@ -1,5 +1,4 @@
-
-import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse } from './types';
+import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
 
@@ -167,6 +166,29 @@ class ApiClient {
 
   async getPropertyById(propertyId: number): Promise<PropertyResponse> {
     const response = await this.makeRequest<PropertyDetailApiResponse>(`/property/${propertyId}`);
+    return response.response;
+  }
+
+  // 펀딩 관련 API 메소드들
+  async createFunding(propertyId: number): Promise<number> {
+    const response = await this.makeRequest<FundingCreateApiResponse>(`/fundings/properties/${propertyId}`, {
+      method: 'POST',
+    });
+    return response.response;
+  }
+
+  async getFundingById(fundingId: number): Promise<FundingResponse> {
+    const response = await this.makeRequest<FundingApiResponse>(`/fundings/${fundingId}`);
+    return response.response;
+  }
+
+  async getMyFundings(): Promise<FundingResponse[]> {
+    const response = await this.makeRequest<FundingListApiResponse>('/fundings/me');
+    return response.response;
+  }
+
+  async getPropertyFundings(propertyId: number): Promise<FundingResponse[]> {
+    const response = await this.makeRequest<FundingListApiResponse>(`/fundings/property/${propertyId}`);
     return response.response;
   }
 }
