@@ -7,5 +7,4 @@ export const rentApi = {
   getMyRents: (): Promise<RentResponse[]> => apiClient.getMyRents(),
   payRent: (paymentData: RentPaymentRequest): Promise<RentPaymentResponse> => apiClient.payRent(paymentData),
   getPropertyPaymentStatus: (): Promise<PropertyPaymentStatus[]> => apiClient.getPropertyPaymentStatus(),
-  getMyPayments: (): Promise<any[]> => apiClient.getMyPayments(),
 };
