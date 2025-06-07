@@ -222,14 +222,14 @@ class ApiClient {
     return response.response;
   }
 
-  async payRent(paymentData: RentPaymentRequest): Promise<RentPaymentResponse> {
+  async payRent(paymentData: RentPaymentRequest): Promise<RentPaymentApiResponse> {
     console.log('API Client: payRent 호출, paymentData:', paymentData);
     const response = await this.makeRequest<RentPaymentApiResponse>('/rent-payment', {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
     console.log('API Client: payRent 응답:', response);
-    return response.response;
+    return response;
   }
 }
 
