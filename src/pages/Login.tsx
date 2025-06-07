@@ -92,11 +92,22 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1487958449943-2429e8be8625?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Overlay pattern for blockchain aesthetic */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-indigo-900/20"></div>
+      
+      <Card className="w-full max-w-md backdrop-blur-sm bg-white/95 shadow-2xl border border-white/20">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900">RealEstate Invest</CardTitle>
-          <CardDescription>블록체인 기반 부동산 공동투자 플랫폼</CardDescription>
+          <CardDescription className="text-gray-600">블록체인 기반 부동산 공동투자 플랫폼</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -172,6 +183,80 @@ const Login = () => {
       </Card>
     </div>
   );
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await authApi.login({
+        username: loginData.username,
+        password: loginData.password
+      });
+
+      if (response.isSuccess) {
+        localStorage.setItem('userId', response.response.userId.toString());
+        
+        toast({
+          title: "로그인 성공",
+          description: response.message,
+        });
+        navigate('/home');
+      } else {
+        toast({
+          title: "로그인 실패",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "로그인 실패",
+        description: "서버 연결에 실패했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    
+    if (signupData.password !== signupData.confirmPassword) {
+      toast({
+        title: "회원가입 실패",
+        description: "비밀번호가 일치하지 않습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await authApi.register({
+        username: signupData.username,
+        password: signupData.password
+      });
+
+      toast({
+        title: "회원가입 성공",
+        description: "계정이 생성되었습니다! 로그인해주세요.",
+      });
+      
+      setSignupData({ username: '', password: '', confirmPassword: '' });
+      setActiveTab('login');
+    } catch (error) {
+      toast({
+        title: "회원가입 실패",
+        description: "서버 연결에 실패했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
 };
 
 export default Login;
