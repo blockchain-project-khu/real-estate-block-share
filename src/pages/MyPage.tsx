@@ -31,33 +31,36 @@ const MyPage = () => {
         console.log('MyPage: 내 펀딩 목록 조회 중...');
         const fundings = await fundingApi.getMyFundings();
         console.log('MyPage: 내 펀딩 목록 응답:', fundings);
-        setMyFundings(fundings);
+        setMyFundings(fundings || []);
         
         // 펀딩에 대응하는 매물 정보 로드
-        const fundingPropertyPromises = fundings.map(funding => {
-          console.log('MyPage: 펀딩 매물 정보 조회 중, propertyId:', funding.propertyId, 'typeof:', typeof funding.propertyId);
-          return propertyApi.getById(funding.propertyId);
-        });
-        const fundingPropertyResults = await Promise.all(fundingPropertyPromises);
-        
-        const fundingPropertyMap: Record<number, PropertyResponse> = {};
-        fundingPropertyResults.forEach(property => {
-          console.log('MyPage: 펀딩 매물 정보 로드됨:', property);
-          fundingPropertyMap[property.id] = property;
-        });
-        setFundingProperties(fundingPropertyMap);
+        if (fundings && fundings.length > 0) {
+          const fundingPropertyPromises = fundings.map(funding => {
+            console.log('MyPage: 펀딩 매물 정보 조회 중, propertyId:', funding.propertyId, 'typeof:', typeof funding.propertyId);
+            return propertyApi.getById(funding.propertyId);
+          });
+          const fundingPropertyResults = await Promise.all(fundingPropertyPromises);
+          
+          const fundingPropertyMap: Record<number, PropertyResponse> = {};
+          fundingPropertyResults.forEach(property => {
+            console.log('MyPage: 펀딩 매물 정보 로드됨:', property);
+            fundingPropertyMap[property.id] = property;
+          });
+          setFundingProperties(fundingPropertyMap);
+        }
 
         // 판매 현황: 내가 판매 중인 매물 목록 로드
         console.log('MyPage: 판매 현황 데이터 로딩 시작');
         const salesProps = await propertyApi.getSales();
         console.log('MyPage: 판매 매물 목록 응답:', salesProps);
-        setSalesProperties(salesProps);
+        setSalesProperties(salesProps || []);
 
         // 월세 납부 현황 데이터 로드
         console.log('MyPage: 월세 납부 현황 데이터 로딩 시작');
         const paymentStatus = await rentApi.getPropertyPaymentStatus();
         console.log('MyPage: 월세 납부 현황 응답:', paymentStatus);
-        setPaymentStatusData(paymentStatus);
+        // paymentStatus가 undefined일 수 있으므로 안전하게 처리
+        setPaymentStatusData(Array.isArray(paymentStatus) ? paymentStatus : []);
         
         console.log('MyPage: 데이터 로딩 완료');
         
@@ -68,6 +71,10 @@ const MyPage = () => {
           description: "데이터를 불러오는데 실패했습니다.",
           variant: "destructive",
         });
+        // 에러 발생 시에도 빈 배열로 초기화
+        setMyFundings([]);
+        setSalesProperties([]);
+        setPaymentStatusData([]);
       } finally {
         setIsLoading(false);
       }
@@ -379,6 +386,27 @@ const MyPage = () => {
       </main>
     </div>
   );
+
+  const formatPrice = (price: number | string) => {
+    const numPrice = typeof price === 'string' ? parseInt(price) : price;
+    return new Intl.NumberFormat('ko-KR').format(numPrice);
+  };
+
+  const toggleItem = (id: string) => {
+    setOpenItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleEditInvestment = (investment: any) => {
+    navigate(`/property/${investment.id}/invest`, {
+      state: {
+        percentage: investment.investmentRatio,
+        investmentAmount: investment.investmentAmount,
+        monthlyReturn: investment.monthlyReturn,
+        propertyName: investment.propertyName,
+        isEdit: true
+      }
+    });
+  };
 };
 
 export default MyPage;
