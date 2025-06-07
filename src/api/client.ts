@@ -163,13 +163,11 @@ class ApiClient {
   }
 
   async getMyProperties(): Promise<PropertyResponse[]> {
-    // 내 매물만 조회하는 별도 엔드포인트 사용
     const response = await this.makeRequest<PropertyApiResponse>('/property/my');
     return response.response;
   }
 
   async getSalesProperties(): Promise<PropertyResponse[]> {
-    // 판매 중인 내 매물 조회
     return this.makeRequest<PropertyResponse[]>('/property/sales');
   }
 
@@ -178,9 +176,10 @@ class ApiClient {
     return response.response;
   }
 
-  async createFunding(propertyId: number): Promise<number> {
+  async createFunding(propertyId: number, percentage: number): Promise<number> {
     const response = await this.makeRequest<FundingCreateApiResponse>(`/fundings/properties/${propertyId}`, {
       method: 'POST',
+      body: JSON.stringify({ percentage }),
     });
     return response.response;
   }

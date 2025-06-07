@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -19,17 +20,13 @@ const InvestmentConfirm = () => {
   
   const { percentage: initialPercentage, investmentAmount: initialInvestmentAmount, monthlyReturn: initialMonthlyReturn, propertyName, isEdit = false } = location.state || {};
   
-  // 수정 시에만 사용할 상태
   const [editablePercentage, setEditablePercentage] = useState(initialPercentage || 5);
   
-  // 현재 사용할 값들 (수정 모드일 때는 editablePercentage 사용)
   const currentPercentage = isEdit ? editablePercentage : initialPercentage;
   
-  // 매물 기본 정보 (실제로는 API에서 가져와야 함)
-  const propertyBasePrice = 50000; // 5억원
-  const monthlyRentTotal = 250; // 250만원
+  const propertyBasePrice = 50000;
+  const monthlyRentTotal = 250;
   
-  // 계산된 값들
   const calculatedInvestmentAmount = (propertyBasePrice * currentPercentage) / 100;
   const calculatedMonthlyReturn = (monthlyRentTotal * currentPercentage) / 100;
 
@@ -51,8 +48,7 @@ const InvestmentConfirm = () => {
     
     try {
       if (!isEdit) {
-        // 실제 펀딩 등록 API 호출
-        const fundingId = await fundingApi.create(parseInt(id));
+        const fundingId = await fundingApi.create(parseInt(id), currentPercentage);
         
         toast({
           title: "투자 신청 완료",
@@ -61,7 +57,6 @@ const InvestmentConfirm = () => {
         
         console.log('Created funding ID:', fundingId);
       } else {
-        // 수정 로직 (기존 목업 유지)
         toast({
           title: "투자 비율 수정 완료",
           description: `${currentPercentage}% (${formatPrice(calculatedInvestmentAmount)}만원) 수정이 완료되었습니다.`,
