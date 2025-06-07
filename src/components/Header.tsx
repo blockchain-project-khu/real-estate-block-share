@@ -16,7 +16,7 @@ const Header = () => {
         title: "로그아웃 완료",
         description: "성공적으로 로그아웃되었습니다.",
       });
-      navigate('/intro');
+      navigate('/login');
     } catch (error) {
       toast({
         title: "로그아웃 실패",
