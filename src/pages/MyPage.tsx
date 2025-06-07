@@ -58,7 +58,7 @@ const MyPage = () => {
         console.log('MyPage: 월세 납부 현황 조회 중...');
         const paymentStatusData = await rentApi.getPropertyPaymentStatus();
         console.log('MyPage: 월세 납부 현황 응답:', paymentStatusData);
-        setPaymentStatus(Array.isArray(paymentStatusData) ? paymentStatusData : []);
+        setPaymentStatus(paymentStatusData || []);
         
         console.log('MyPage: 데이터 로딩 완료');
         
