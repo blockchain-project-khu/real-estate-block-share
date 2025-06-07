@@ -1,4 +1,5 @@
-import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, RentRequest, RentResponse, RentApiResponse, RentListApiResponse, RentPaymentRequest, RentPaymentApiResponse } from './types';
+
+import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, RentRequest, RentResponse, RentApiResponse, RentListApiResponse, RentPaymentRequest, RentPaymentResponse, RentPaymentApiResponse, PropertyPaymentStatus, PropertyPaymentStatusApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
 
@@ -228,6 +229,14 @@ class ApiClient {
       body: JSON.stringify(paymentData),
     });
     console.log('API Client: payRent 응답:', response);
+    return response.response;
+  }
+
+  // 월세 납부 현황 조회 (매물별)
+  async getPropertyPaymentStatus(): Promise<PropertyPaymentStatus[]> {
+    console.log('API Client: getPropertyPaymentStatus 호출');
+    const response = await this.makeRequest<PropertyPaymentStatusApiResponse>('/rent-payment/sendBy-property');
+    console.log('API Client: getPropertyPaymentStatus 응답:', response);
     return response.response;
   }
 }

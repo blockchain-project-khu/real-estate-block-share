@@ -172,3 +172,29 @@ export interface RentPaymentApiResponse {
   message: string;
   response: RentPaymentResponse;
 }
+
+// 월세 납부 현황 조회를 위한 타입들
+export interface PaymentDetail {
+  paymentId: number;
+  rentId: number;
+  tenantId: number;
+  propertyId: number;
+  amount: number;
+  paidAt: string;
+  status: string;
+}
+
+export interface PropertyPaymentStatus {
+  propertyId: number;
+  propertyName: string;
+  totalReceived: number;
+  paymentCount: number;
+  payments: PaymentDetail[];
+}
+
+export interface PropertyPaymentStatusApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: PropertyPaymentStatus[];
+}

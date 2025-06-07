@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -6,18 +7,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import { ArrowDown, ArrowUp, Edit } from 'lucide-react';
-import { fundingApi, propertyApi } from '@/api';
-import { FundingResponse, PropertyResponse } from '@/api/types';
+import { fundingApi, propertyApi, rentApi } from '@/api';
+import { FundingResponse, PropertyResponse, PropertyPaymentStatus } from '@/api/types';
 
 const MyPage = () => {
   const navigate = useNavigate();
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
-  const [showCompletedRents, setShowCompletedRents] = useState(false);
   const [myFundings, setMyFundings] = useState<FundingResponse[]>([]);
   const [fundingProperties, setFundingProperties] = useState<Record<number, PropertyResponse>>({});
   const [salesProperties, setSalesProperties] = useState<PropertyResponse[]>([]);
+  const [paymentStatusData, setPaymentStatusData] = useState<PropertyPaymentStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +52,12 @@ const MyPage = () => {
         const salesProps = await propertyApi.getSales();
         console.log('MyPage: 판매 매물 목록 응답:', salesProps);
         setSalesProperties(salesProps);
+
+        // 월세 납부 현황 데이터 로드
+        console.log('MyPage: 월세 납부 현황 데이터 로딩 시작');
+        const paymentStatus = await rentApi.getPropertyPaymentStatus();
+        console.log('MyPage: 월세 납부 현황 응답:', paymentStatus);
+        setPaymentStatusData(paymentStatus);
         
         console.log('MyPage: 데이터 로딩 완료');
         
@@ -77,38 +85,6 @@ const MyPage = () => {
     setOpenItems(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const mockRentApplications = [
-    {
-      id: 'rent1',
-      propertyName: '강남구 신축 오피스텔',
-      location: '서울 강남구 역삼동',
-      monthlyRent: 250,
-      applicationDate: '2024-01-10',
-      fundingProgress: 100,
-      status: '임대 중',
-      paymentHistory: [
-        { date: '2024-02-01', amount: 250, status: '완료' },
-        { date: '2024-03-01', amount: 250, status: '완료' },
-        { date: '2024-04-01', amount: 250, status: '완료' },
-        { date: '2024-05-01', amount: 250, status: '완료' },
-        { date: '2024-06-01', amount: 250, status: '예정' }
-      ]
-    },
-    {
-      id: 'rent2',
-      propertyName: '송파구 투룸 원룸',
-      location: '서울 송파구 잠실동',
-      monthlyRent: 180,
-      applicationDate: '2024-03-15',
-      fundingProgress: 75,
-      status: '펀딩 대기',
-      paymentHistory: []
-    }
-  ];
-
-  const completedRents = mockRentApplications.filter(rent => rent.fundingProgress === 100);
-  const pendingRents = mockRentApplications.filter(rent => rent.fundingProgress < 100);
-
   const handleEditInvestment = (investment: any) => {
     navigate(`/property/${investment.id}/invest`, {
       state: {
@@ -118,20 +94,6 @@ const MyPage = () => {
         propertyName: investment.propertyName,
         isEdit: true
       }
-    });
-  };
-
-  const handleRentPayment = (rentId: string) => {
-    toast({
-      title: "월세 납부 완료",
-      description: "월세가 성공적으로 납부되었습니다.",
-    });
-  };
-
-  const handleStatusChange = (saleId: string, newStatus: string) => {
-    toast({
-      title: "매물 상태 변경 완료",
-      description: `매물 상태가 "${newStatus}"로 변경되었습니다.`,
     });
   };
 
@@ -160,7 +122,7 @@ const MyPage = () => {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="investments">펀딩 현황</TabsTrigger>
             <TabsTrigger value="sales">판매 현황</TabsTrigger>
-            <TabsTrigger value="rents">월세 납부</TabsTrigger>
+            <TabsTrigger value="rents">월세 수취 현황</TabsTrigger>
           </TabsList>
 
           {/* 펀딩 현황 - 내가 참여한 펀딩 목록 (/fundings/me) */}
@@ -335,133 +297,80 @@ const MyPage = () => {
             </Card>
           </TabsContent>
 
-          {/* 월세 납부 - 기존 목업 데이터 유지 */}
+          {/* 월세 수취 현황 - API 연동 */}
           <TabsContent value="rents" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>월세 납부 현황</CardTitle>
-                <CardDescription>임대한 매물의 월세 납부 현황을 확인하세요</CardDescription>
+                <CardTitle>월세 수취 현황</CardTitle>
+                <CardDescription>내 매물의 월세 수취 현황을 확인하세요</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex gap-4 mb-4">
-                  <Button 
-                    variant={!showCompletedRents ? "default" : "outline"}
-                    onClick={() => setShowCompletedRents(false)}
-                  >
-                    펀딩 대기 중 ({pendingRents.length})
-                  </Button>
-                  <Button 
-                    variant={showCompletedRents ? "default" : "outline"}
-                    onClick={() => setShowCompletedRents(true)}
-                  >
-                    월세 납부 중 ({completedRents.length})
-                  </Button>
-                </div>
-
-                {!showCompletedRents ? (
-                  // 펀딩 대기 중인 임대 신청
-                  <div className="space-y-4">
-                    {pendingRents.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        펀딩 대기 중인 임대 신청이 없습니다.
-                      </div>
-                    ) : (
-                      pendingRents.map((rent) => (
-                        <Card key={rent.id}>
+                {paymentStatusData.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    월세 수취 현황이 없습니다.
+                  </div>
+                ) : (
+                  paymentStatusData.map((propertyStatus) => (
+                    <Collapsible key={propertyStatus.propertyId}>
+                      <CollapsibleTrigger 
+                        className="w-full"
+                        onClick={() => toggleItem(`property-${propertyStatus.propertyId}`)}
+                      >
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-center">
-                              <div>
-                                <h3 className="font-semibold">{rent.propertyName}</h3>
-                                <p className="text-sm text-gray-600">{rent.location}</p>
-                                <p className="text-sm text-gray-600">신청일: {rent.applicationDate}</p>
-                                <Badge className="bg-yellow-100 text-yellow-800 mt-1">
-                                  펀딩 {rent.fundingProgress}% - 대기 중
+                              <div className="text-left">
+                                <h3 className="font-semibold">{propertyStatus.propertyName}</h3>
+                                <p className="text-sm text-gray-600">총 {propertyStatus.paymentCount}회 수취</p>
+                                <Badge className="bg-green-100 text-green-800 mt-1">
+                                  월세 수취 중
                                 </Badge>
                               </div>
-                              <div className="text-right">
-                                <p className="font-bold text-lg">{formatPrice(rent.monthlyRent)}만원</p>
-                                <p className="text-sm text-gray-500">월 임대료</p>
+                              <div className="text-right flex items-center gap-4">
+                                <div>
+                                  <p className="font-bold text-lg">{formatPrice(propertyStatus.totalReceived)}원</p>
+                                  <p className="text-sm text-gray-600">총 수취 금액</p>
+                                </div>
+                                {openItems[`property-${propertyStatus.propertyId}`] ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
                               </div>
                             </div>
                           </CardContent>
                         </Card>
-                      ))
-                    )}
-                  </div>
-                ) : (
-                  // 펀딩 완료된 임대 (월세 납부 중)
-                  <div className="space-y-4">
-                    {completedRents.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        월세 납부 중인 임대가 없습니다.
-                      </div>
-                    ) : (
-                      completedRents.map((rent) => (
-                        <Collapsible key={rent.id}>
-                          <CollapsibleTrigger 
-                            className="w-full"
-                            onClick={() => toggleItem(rent.id)}
-                          >
-                            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-center">
-                                  <div className="text-left">
-                                    <h3 className="font-semibold">{rent.propertyName}</h3>
-                                    <p className="text-sm text-gray-600">{rent.location}</p>
-                                    <Badge className="bg-green-100 text-green-800 mt-1">
-                                      임대 중 - 자동 납부
-                                    </Badge>
-                                  </div>
-                                  <div className="text-right flex items-center gap-4">
-                                    <div>
-                                      <p className="font-bold text-lg">{formatPrice(rent.monthlyRent)}만원</p>
-                                      <p className="text-sm text-gray-600">월 임대료</p>
-                                    </div>
-                                    {openItems[rent.id] ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </CollapsibleTrigger>
-                          
-                          <CollapsibleContent>
-                            <Card className="mt-2 bg-gray-50">
-                              <CardContent className="p-4">
-                                <h4 className="font-semibold mb-3">월세 납부 내역</h4>
-                                <div className="space-y-2">
-                                  {rent.paymentHistory.map((payment, index) => (
-                                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                                      <div>
-                                        <span className="font-medium">{payment.date}</span>
-                                      </div>
-                                      <div className="flex items-center gap-3">
-                                        <span className="font-bold">{formatPrice(payment.amount)}만원</span>
-                                        <Badge className={payment.status === '완료' ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}>
-                                          {payment.status}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                                
-                                {rent.paymentHistory.some(p => p.status === '예정') && (
-                                  <div className="mt-4 pt-4 border-t">
-                                    <Button 
-                                      size="sm" 
-                                      className="bg-green-600 hover:bg-green-700"
-                                      onClick={() => handleRentPayment(rent.id)}
-                                    >
-                                      다음 월세 미리 납부
-                                    </Button>
-                                  </div>
-                                )}
-                              </CardContent>
-                            </Card>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))
-                    )}
-                  </div>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent>
+                        <Card className="mt-2 bg-gray-50">
+                          <CardContent className="p-4">
+                            <h4 className="font-semibold mb-3">월세 수취 내역</h4>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>결제일</TableHead>
+                                  <TableHead>금액</TableHead>
+                                  <TableHead>상태</TableHead>
+                                  <TableHead>결제 ID</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {propertyStatus.payments.map((payment) => (
+                                  <TableRow key={payment.paymentId}>
+                                    <TableCell>{payment.paidAt}</TableCell>
+                                    <TableCell className="font-bold">{formatPrice(payment.amount)}원</TableCell>
+                                    <TableCell>
+                                      <Badge className="bg-green-100 text-green-800">
+                                        {payment.status === 'PAID' ? '수취 완료' : payment.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-sm text-gray-600">{payment.paymentId}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))
                 )}
               </CardContent>
             </Card>
