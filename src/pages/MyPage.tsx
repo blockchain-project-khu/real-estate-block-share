@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -386,27 +385,6 @@ const MyPage = () => {
       </main>
     </div>
   );
-
-  const formatPrice = (price: number | string) => {
-    const numPrice = typeof price === 'string' ? parseInt(price) : price;
-    return new Intl.NumberFormat('ko-KR').format(numPrice);
-  };
-
-  const toggleItem = (id: string) => {
-    setOpenItems(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleEditInvestment = (investment: any) => {
-    navigate(`/property/${investment.id}/invest`, {
-      state: {
-        percentage: investment.investmentRatio,
-        investmentAmount: investment.investmentAmount,
-        monthlyReturn: investment.monthlyReturn,
-        propertyName: investment.propertyName,
-        isEdit: true
-      }
-    });
-  };
 };
 
 export default MyPage;
