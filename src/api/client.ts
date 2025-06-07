@@ -74,9 +74,9 @@ class ApiClient {
     requiresAuth: boolean = true
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    let headers: Record<string, string> = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> || {}),
     };
 
     if (requiresAuth) {
