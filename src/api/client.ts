@@ -1,4 +1,3 @@
-
 import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
@@ -133,7 +132,6 @@ class ApiClient {
     }
   }
 
-  // 인증 관련 API 메소드들
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     return this.makeRequest<LoginResponse>('/login', {
       method: 'POST',
@@ -152,7 +150,6 @@ class ApiClient {
     this.clearTokens();
   }
 
-  // 매물 관련 API 메소드들
   async createProperty(propertyData: PropertyRequest): Promise<PropertyResponse> {
     return this.makeRequest<PropertyResponse>('/property', {
       method: 'POST',
@@ -171,12 +168,16 @@ class ApiClient {
     return response.response;
   }
 
+  async getSalesProperties(): Promise<PropertyResponse[]> {
+    // 판매 중인 내 매물 조회
+    return this.makeRequest<PropertyResponse[]>('/property/sales');
+  }
+
   async getPropertyById(propertyId: number): Promise<PropertyResponse> {
     const response = await this.makeRequest<PropertyDetailApiResponse>(`/property/${propertyId}`);
     return response.response;
   }
 
-  // 펀딩 관련 API 메소드들
   async createFunding(propertyId: number): Promise<number> {
     const response = await this.makeRequest<FundingCreateApiResponse>(`/fundings/properties/${propertyId}`, {
       method: 'POST',
