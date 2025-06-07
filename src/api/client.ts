@@ -164,6 +164,13 @@ class ApiClient {
     return response.response;
   }
 
+  async getMyProperties(): Promise<PropertyResponse[]> {
+    // 현재 GET /property API가 내 매물만 반환하는 것으로 보임 (userId가 동일)
+    // 만약 별도의 endpoint가 필요하다면 여기를 수정
+    const response = await this.makeRequest<PropertyApiResponse>('/property');
+    return response.response;
+  }
+
   async getPropertyById(propertyId: number): Promise<PropertyResponse> {
     const response = await this.makeRequest<PropertyDetailApiResponse>(`/property/${propertyId}`);
     return response.response;

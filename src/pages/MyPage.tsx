@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -17,31 +18,50 @@ const MyPage = () => {
   const [showCompletedRents, setShowCompletedRents] = useState(false);
   const [myFundings, setMyFundings] = useState<FundingResponse[]>([]);
   const [fundingProperties, setFundingProperties] = useState<Record<number, PropertyResponse>>({});
+  const [myProperties, setMyProperties] = useState<PropertyResponse[]>([]);
+  const [propertyFundings, setPropertyFundings] = useState<Record<number, FundingResponse[]>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadMyFundings = async () => {
+    const loadData = async () => {
       try {
+        // 내가 참여한 펀딩 목록 로드
         const fundings = await fundingApi.getMyFundings();
         setMyFundings(fundings);
         
-        // 각 펀딩에 대응하는 매물 정보도 가져오기
-        const propertyPromises = fundings.map(funding => 
+        // 펀딩에 대응하는 매물 정보 로드
+        const fundingPropertyPromises = fundings.map(funding => 
           propertyApi.getById(funding.propertyId)
         );
-        const properties = await Promise.all(propertyPromises);
+        const fundingPropertyResults = await Promise.all(fundingPropertyPromises);
         
-        const propertyMap: Record<number, PropertyResponse> = {};
-        properties.forEach(property => {
-          propertyMap[property.id] = property;
+        const fundingPropertyMap: Record<number, PropertyResponse> = {};
+        fundingPropertyResults.forEach(property => {
+          fundingPropertyMap[property.id] = property;
         });
+        setFundingProperties(fundingPropertyMap);
+
+        // 내가 등록한 매물 목록 로드
+        const properties = await propertyApi.getMy();
+        setMyProperties(properties);
         
-        setFundingProperties(propertyMap);
+        // 각 매물에 대한 펀딩 현황 로드
+        const propertyFundingPromises = properties.map(property => 
+          fundingApi.getPropertyFundings(property.id)
+        );
+        const propertyFundingResults = await Promise.all(propertyFundingPromises);
+        
+        const propertyFundingMap: Record<number, FundingResponse[]> = {};
+        properties.forEach((property, index) => {
+          propertyFundingMap[property.id] = propertyFundingResults[index];
+        });
+        setPropertyFundings(propertyFundingMap);
+        
       } catch (error) {
-        console.error('Failed to load my fundings:', error);
+        console.error('Failed to load data:', error);
         toast({
-          title: "펀딩 목록 로딩 실패",
-          description: "펀딩 목록을 불러오는데 실패했습니다.",
+          title: "데이터 로딩 실패",
+          description: "데이터를 불러오는데 실패했습니다.",
           variant: "destructive",
         });
       } finally {
@@ -49,11 +69,12 @@ const MyPage = () => {
       }
     };
 
-    loadMyFundings();
+    loadData();
   }, []);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+  const formatPrice = (price: number | string) => {
+    const numPrice = typeof price === 'string' ? parseInt(price) : price;
+    return new Intl.NumberFormat('ko-KR').format(numPrice);
   };
 
   const toggleItem = (id: string) => {
@@ -177,7 +198,7 @@ const MyPage = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">펀딩 정보를 불러오는 중...</div>
+          <div className="text-center">데이터를 불러오는 중...</div>
         </main>
       </div>
     );
@@ -200,7 +221,7 @@ const MyPage = () => {
             <TabsTrigger value="rents">월세 납부</TabsTrigger>
           </TabsList>
 
-          {/* 펀딩 현황 - 실제 API 데이터 사용 */}
+          {/* 펀딩 현황 */}
           <TabsContent value="investments" className="space-y-4">
             <Card>
               <CardHeader>
@@ -299,7 +320,7 @@ const MyPage = () => {
             </Card>
           </TabsContent>
 
-          {/* 판매 현황 - 업데이트됨 */}
+          {/* 판매 현황 - 실제 API 데이터 사용 */}
           <TabsContent value="sales" className="space-y-4">
             <Card>
               <CardHeader>
@@ -307,80 +328,103 @@ const MyPage = () => {
                 <CardDescription>등록한 매물들의 펀딩 현황을 확인하세요</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {mockSales.map((sale) => (
-                  <Collapsible key={sale.id}>
-                    <CollapsibleTrigger 
-                      className="w-full"
-                      onClick={() => toggleItem(sale.id)}
-                    >
-                      <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-center">
-                            <div className="text-left">
-                              <h3 className="font-semibold">{sale.propertyName}</h3>
-                              <p className="text-sm text-gray-600">{sale.location}</p>
-                              <Badge className={sale.currentFunding === 100 ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}>
-                                {sale.status}
-                              </Badge>
-                            </div>
-                            <div className="text-right flex items-center gap-4">
-                              <div>
-                                <p className="font-bold">{sale.currentFunding}% 펀딩</p>
-                                <p className="text-sm text-gray-600">{formatPrice(sale.totalPrice)}만원</p>
-                              </div>
-                              {openItems[sale.id] ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </CollapsibleTrigger>
+                {myProperties.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    등록한 매물이 없습니다.
+                  </div>
+                ) : (
+                  myProperties.map((property) => {
+                    const fundings = propertyFundings[property.id] || [];
+                    const totalInvestors = fundings.length;
                     
-                    <CollapsibleContent>
-                      <Card className="mt-2 bg-gray-50">
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                            <div>
-                              <span className="text-gray-600">등록일</span>
-                              <p className="font-semibold">{sale.registrationDate}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">총 투자자</span>
-                              <p className="font-semibold">{sale.totalInvestors}명</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">월 임대료</span>
-                              <p className="font-semibold text-green-600">{formatPrice(sale.monthlyRent)}만원</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">펀딩 진행률</span>
-                              <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                <div 
-                                  className={`h-2 rounded-full ${sale.currentFunding === 100 ? 'bg-green-600' : 'bg-blue-600'}`}
-                                  style={{ width: `${sale.currentFunding}%` }}
-                                />
+                    return (
+                      <Collapsible key={property.id}>
+                        <CollapsibleTrigger 
+                          className="w-full"
+                          onClick={() => toggleItem(`property-${property.id}`)}
+                        >
+                          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-center">
+                                <div className="text-left">
+                                  <h3 className="font-semibold">{property.name}</h3>
+                                  <p className="text-sm text-gray-600">{property.address}</p>
+                                  <Badge className={property.currentFundingPercent === 100 ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}>
+                                    {property.currentFundingPercent === 100 ? '펀딩 완료' : '펀딩 진행 중'}
+                                  </Badge>
+                                </div>
+                                <div className="text-right flex items-center gap-4">
+                                  <div>
+                                    <p className="font-bold">{property.currentFundingPercent}% 펀딩</p>
+                                    <p className="text-sm text-gray-600">{formatPrice(property.price)}원</p>
+                                  </div>
+                                  {openItems[`property-${property.id}`] ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                          
-                          {sale.currentFunding === 100 && sale.status !== '펀딩 완료' && (
-                            <Button 
-                              size="sm" 
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => handleStatusChange(sale.id, '펀딩 완료')}
-                            >
-                              펀딩 완료로 상태 변경
-                            </Button>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))}
+                            </CardContent>
+                          </Card>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent>
+                          <Card className="mt-2 bg-gray-50">
+                            <CardContent className="p-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                                <div>
+                                  <span className="text-gray-600">매물 타입</span>
+                                  <p className="font-semibold">{property.type}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">총 투자자</span>
+                                  <p className="font-semibold">{totalInvestors}명</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">월 임대료</span>
+                                  <p className="font-semibold text-green-600">{formatPrice(property.monthlyRent)}원</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">펀딩 진행률</span>
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                    <div 
+                                      className={`h-2 rounded-full ${property.currentFundingPercent === 100 ? 'bg-green-600' : 'bg-blue-600'}`}
+                                      style={{ width: `${property.currentFundingPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {fundings.length > 0 && (
+                                <div className="mt-4">
+                                  <h4 className="font-semibold mb-2">펀딩 참여자 목록</h4>
+                                  <div className="space-y-2">
+                                    {fundings.map((funding) => (
+                                      <div key={funding.fundingId} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                                        <div>
+                                          <span className="font-medium">펀딩 ID: {funding.fundingId}</span>
+                                          <p className="text-sm text-gray-600">사용자 ID: {funding.userId}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <span className="font-bold">{funding.amount}%</span>
+                                          <Badge className={funding.status === 'APPROVED' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
+                                            {funding.status === 'APPROVED' ? '승인됨' : '대기 중'}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* 월세 납부 - 업데이트됨 */}
+          {/* 월세 납부 - 기존 목업 데이터 유지 */}
           <TabsContent value="rents" className="space-y-4">
             <Card>
               <CardHeader>

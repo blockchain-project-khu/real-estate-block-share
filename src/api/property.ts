@@ -3,15 +3,8 @@ import { apiClient } from './client';
 import { PropertyRequest, PropertyResponse } from './types';
 
 export const propertyApi = {
-  create: async (propertyData: PropertyRequest): Promise<PropertyResponse> => {
-    return apiClient.createProperty(propertyData);
-  },
-
-  getAll: async (): Promise<PropertyResponse[]> => {
-    return apiClient.getProperties();
-  },
-
-  getById: async (propertyId: number): Promise<PropertyResponse> => {
-    return apiClient.getPropertyById(propertyId);
-  }
+  create: (propertyData: PropertyRequest): Promise<PropertyResponse> => apiClient.createProperty(propertyData),
+  getAll: (): Promise<PropertyResponse[]> => apiClient.getProperties(),
+  getMy: (): Promise<PropertyResponse[]> => apiClient.getMyProperties(),
+  getById: (propertyId: number): Promise<PropertyResponse> => apiClient.getPropertyById(propertyId),
 };
