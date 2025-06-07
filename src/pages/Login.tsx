@@ -12,6 +12,7 @@ const Login = () => {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [signupData, setSignupData] = useState({ username: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -78,6 +79,7 @@ const Login = () => {
       
       // 회원가입 성공 후 로그인 탭으로 전환
       setSignupData({ username: '', password: '', confirmPassword: '' });
+      setActiveTab('login');
     } catch (error) {
       toast({
         title: "회원가입 실패",
@@ -97,7 +99,7 @@ const Login = () => {
           <CardDescription>블록체인 기반 부동산 공동투자 플랫폼</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">로그인</TabsTrigger>
               <TabsTrigger value="signup">회원가입</TabsTrigger>
