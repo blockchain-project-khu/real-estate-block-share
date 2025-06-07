@@ -1,4 +1,3 @@
-
 import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, RentRequest, RentResponse, RentApiResponse, RentListApiResponse, RentPaymentRequest, RentPaymentApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
@@ -222,14 +221,14 @@ class ApiClient {
     return response.response;
   }
 
-  async payRent(paymentData: RentPaymentRequest): Promise<RentPaymentApiResponse> {
+  async payRent(paymentData: RentPaymentRequest): Promise<RentPaymentResponse> {
     console.log('API Client: payRent 호출, paymentData:', paymentData);
     const response = await this.makeRequest<RentPaymentApiResponse>('/rent-payment', {
       method: 'POST',
       body: JSON.stringify(paymentData),
     });
     console.log('API Client: payRent 응답:', response);
-    return response;
+    return response.response;
   }
 }
 
