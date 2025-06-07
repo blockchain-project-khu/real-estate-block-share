@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -89,6 +88,15 @@ const MyPage = () => {
 
   const toggleItem = (id: string) => {
     setOpenItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handlePayRent = (propertyId: number, propertyName: string) => {
+    console.log(`월세 납부 요청 - 매물 ID: ${propertyId}, 매물명: ${propertyName}`);
+    // TODO: 월세 납부 API 연동 예정
+    toast({
+      title: "월세 납부",
+      description: `${propertyName}의 월세 납부 기능은 준비 중입니다.`,
+    });
   };
 
   if (isLoading) {
@@ -296,7 +304,7 @@ const MyPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle>월세 납부 현황</CardTitle>
-                <CardDescription>매물별 월세 납부 현황을 확인하세요</CardDescription>
+                <CardDescription>매물별 월세 납부 현황을 확인하고 월세를 납부하세요</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {paymentStatus.length === 0 ? (
@@ -309,43 +317,76 @@ const MyPage = () => {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-center mb-4">
                           <div className="text-left">
-                            <h3 className="font-semibold">{propertyPayment.propertyName}</h3>
-                            <div className="flex gap-2 mt-1">
-                              <Badge className="bg-green-100 text-green-800">
-                                총 {propertyPayment.paymentCount}회 납부
+                            <h3 className="font-semibold text-lg">{propertyPayment.propertyName}</h3>
+                            <div className="flex gap-2 mt-2">
+                              <Badge className="bg-blue-100 text-blue-800">
+                                매물 ID: {propertyPayment.propertyId}
                               </Badge>
-                              <Badge variant="outline" className="bg-blue-100">
-                                총 수령액: {formatPrice(propertyPayment.totalReceived)}원
-                              </Badge>
+                              {propertyPayment.paymentCount > 0 ? (
+                                <>
+                                  <Badge className="bg-green-100 text-green-800">
+                                    총 {propertyPayment.paymentCount}회 납부
+                                  </Badge>
+                                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                                    총 납부액: {formatPrice(propertyPayment.totalReceived)}원
+                                  </Badge>
+                                </>
+                              ) : (
+                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                                  아직 납부 내역 없음
+                                </Badge>
+                              )}
                             </div>
+                          </div>
+                          <div className="text-right">
+                            <Button 
+                              onClick={() => handlePayRent(propertyPayment.propertyId, propertyPayment.propertyName)}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              월세 납부하기
+                            </Button>
                           </div>
                         </div>
                         
-                        <div className="mt-4">
-                          <h4 className="font-medium text-sm text-gray-700 mb-2">납부 내역</h4>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="text-xs">납부일</TableHead>
-                                <TableHead className="text-xs">금액</TableHead>
-                                <TableHead className="text-xs">상태</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {propertyPayment.payments.map((payment) => (
-                                <TableRow key={payment.paymentId}>
-                                  <TableCell className="text-xs">{payment.paidAt}</TableCell>
-                                  <TableCell className="text-xs font-semibold">{formatPrice(payment.amount)}원</TableCell>
-                                  <TableCell className="text-xs">
-                                    <Badge variant="outline" className={payment.status === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-gray-100'}>
-                                      {payment.status === 'PAID' ? '납부완료' : payment.status}
-                                    </Badge>
-                                  </TableCell>
+                        {propertyPayment.payments && propertyPayment.payments.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h4 className="font-medium text-sm text-gray-700 mb-3">납부 내역</h4>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="text-xs">납부일</TableHead>
+                                  <TableHead className="text-xs">금액</TableHead>
+                                  <TableHead className="text-xs">상태</TableHead>
+                                  <TableHead className="text-xs">납부 ID</TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
+                              </TableHeader>
+                              <TableBody>
+                                {propertyPayment.payments.map((payment) => (
+                                  <TableRow key={payment.paymentId}>
+                                    <TableCell className="text-xs">{payment.paidAt}</TableCell>
+                                    <TableCell className="text-xs font-semibold text-green-600">
+                                      {formatPrice(payment.amount)}원
+                                    </TableCell>
+                                    <TableCell className="text-xs">
+                                      <Badge variant="outline" className={payment.status === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-gray-100'}>
+                                        {payment.status === 'PAID' ? '납부완료' : payment.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-gray-500">#{payment.paymentId}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                        
+                        {(!propertyPayment.payments || propertyPayment.payments.length === 0) && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="text-center py-4 text-gray-500 text-sm">
+                              아직 이 매물에 대한 월세 납부 내역이 없습니다.
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))
