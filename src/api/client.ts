@@ -189,14 +189,17 @@ class ApiClient {
   }
 
   async getMyFundings(): Promise<FundingResponse[]> {
+    console.log('API Client: getMyFundings 호출');
     const response = await this.makeRequest<FundingListApiResponse>('/fundings/me');
+    console.log('API Client: getMyFundings 응답:', response);
     return response.response;
   }
 
-  async getPropertyFundings(propertyId: number): Promise<FundingResponse[]> {
-    const response = await this.makeRequest<FundingListApiResponse>(`/fundings/property/${propertyId}`);
-    return response.response;
-  }
+  // getPropertyFundings 메소드 제거 (해당 API가 존재하지 않음)
+  // async getPropertyFundings(propertyId: number): Promise<FundingResponse[]> {
+  //   const response = await this.makeRequest<FundingListApiResponse>(`/fundings/property/${propertyId}`);
+  //   return response.response;
+  // }
 }
 
 export const apiClient = new ApiClient(BASE_URL);
