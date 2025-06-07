@@ -1,3 +1,4 @@
+
 import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
@@ -195,11 +196,12 @@ class ApiClient {
     return response.response;
   }
 
-  // getPropertyFundings 메소드 제거 (해당 API가 존재하지 않음)
-  // async getPropertyFundings(propertyId: number): Promise<FundingResponse[]> {
-  //   const response = await this.makeRequest<FundingListApiResponse>(`/fundings/property/${propertyId}`);
-  //   return response.response;
-  // }
+  async getPropertyFundings(propertyId: number): Promise<FundingResponse[]> {
+    console.log('API Client: getPropertyFundings 호출, propertyId:', propertyId);
+    const response = await this.makeRequest<FundingListApiResponse>(`/fundings/property/${propertyId}`);
+    console.log('API Client: getPropertyFundings 응답:', response);
+    return response.response;
+  }
 }
 
 export const apiClient = new ApiClient(BASE_URL);
