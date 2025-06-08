@@ -111,90 +111,41 @@ export interface FundingCreateApiResponse {
   response: number; // fundingId
 }
 
-// 임대 관련 타입들
-export interface RentRequest {
-  userId: number;
-  propertyId: number;
-  startDate: string;
-  endDate: string;
-  monthlyRent: number;
-  deposit: number;
-  paymentDay: number;
-}
-
-export interface RentResponse {
-  rentId: number;
-  userId: number;
-  username: string;
-  propertyId: number;
-  propertyOwnerId: number;
-  propertyOwnerName: string;
-  startDate: string;
-  endDate: string;
-  monthlyRent: number;
-  deposit: number;
-  status: string;
-  paymentDay: number;
-}
-
-export interface RentApiResponse {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  response: RentResponse;
-}
-
-export interface RentListApiResponse {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  response: RentResponse[];
-}
-
-export interface RentPaymentRequest {
-  rentId: number;
-  amount: number;
-}
-
-export interface RentPaymentResponse {
+// 새로운 월세 관련 타입들
+export interface RentPayment {
   paymentId: number;
   rentId: number;
-  tenantId: number;
-  propertyId: number;
-  amount: number;
-  paidAt: number[];
-  status: string;
-}
-
-export interface RentPaymentApiResponse {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  response: RentPaymentResponse;
-}
-
-// 월세 납부 현황 조회를 위한 타입들
-export interface PaymentDetail {
-  paymentId: number;
-  rentId: number;
-  tenantId: number;
+  userId: number;
   propertyId: number;
   amount: number;
   paidAt: string;
   status: string;
 }
 
-export interface PropertyPaymentStatus {
+export interface FundingIncomeResponse {
   propertyId: number;
-  propertyName: string;
-  totalReceived: number;
-  paymentCount: number;
-  payments: PaymentDetail[];
+  fundingPercentage: number;
+  totalIncome: number;
+  payments: RentPayment[];
 }
 
-export interface PropertyPaymentStatusApiResponse {
+export interface FundingIncomeApiResponse {
   isSuccess: boolean;
   code: string;
   message: string;
-  response: PropertyPaymentStatus[];
+  response: FundingIncomeResponse[];
+}
+
+export interface MyRentPaymentApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: RentPayment[];
+}
+
+export interface RentPaymentApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: RentPayment;
 }

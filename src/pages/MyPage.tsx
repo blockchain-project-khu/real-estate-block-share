@@ -10,44 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from '@/hooks/use-toast';
 import { ArrowDown, ArrowUp, Edit } from 'lucide-react';
 import { fundingApi, propertyApi, rentApi } from '@/api';
-import { FundingResponse, PropertyResponse, PropertyPaymentStatus } from '@/api/types';
-
-// 월세 납부 현황 목업 데이터 타입
-interface RentPaymentStatus {
-  propertyId: number;
-  propertyName: string;
-  propertyAddress: string;
-  monthlyRent: number;
-  contractStartDate: string;
-  nextPaymentDate: string;
-  paymentStatus: 'PAID' | 'PENDING' | 'OVERDUE';
-  totalPaid: number;
-  paymentHistory: Array<{
-    paymentId: number;
-    amount: number;
-    paidAt: string;
-    status: string;
-  }>;
-}
-
-// 월세 수취 현황 목업 데이터 타입
-interface RentReceiveStatus {
-  propertyId: number;
-  propertyName: string;
-  propertyAddress: string;
-  monthlyRent: number;
-  tenantName: string;
-  contractStartDate: string;
-  nextReceiveDate: string;
-  totalReceived: number;
-  receiveHistory: Array<{
-    receiptId: number;
-    amount: number;
-    receivedAt: string;
-    status: string;
-    tenantName: string;
-  }>;
-}
+import { FundingResponse, PropertyResponse, FundingIncomeResponse, RentPayment } from '@/api/types';
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -55,74 +18,9 @@ const MyPage = () => {
   const [myFundings, setMyFundings] = useState<FundingResponse[]>([]);
   const [fundingProperties, setFundingProperties] = useState<Record<number, PropertyResponse>>({});
   const [salesProperties, setSalesProperties] = useState<PropertyResponse[]>([]);
-  const [paymentStatus, setPaymentStatus] = useState<PropertyPaymentStatus[]>([]);
+  const [fundingIncome, setFundingIncome] = useState<FundingIncomeResponse[]>([]);
+  const [myRentPayments, setMyRentPayments] = useState<RentPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // 월세 납부 현황 목업 데이터
-  const [rentPaymentStatus] = useState<RentPaymentStatus[]>([
-    {
-      propertyId: 1,
-      propertyName: "강남구 신사동 오피스텔",
-      propertyAddress: "서울시 강남구 신사동 123-45",
-      monthlyRent: 1500000,
-      contractStartDate: "2024-01-01",
-      nextPaymentDate: "2024-07-01",
-      paymentStatus: 'PAID',
-      totalPaid: 9000000,
-      paymentHistory: [
-        { paymentId: 1, amount: 1500000, paidAt: "2024-06-01", status: "PAID" },
-        { paymentId: 2, amount: 1500000, paidAt: "2024-05-01", status: "PAID" },
-        { paymentId: 3, amount: 1500000, paidAt: "2024-04-01", status: "PAID" },
-      ]
-    },
-    {
-      propertyId: 2,
-      propertyName: "홍대 원룸",
-      propertyAddress: "서울시 마포구 홍대입구 456-78",
-      monthlyRent: 800000,
-      contractStartDate: "2024-02-01",
-      nextPaymentDate: "2024-07-01",
-      paymentStatus: 'PENDING',
-      totalPaid: 4000000,
-      paymentHistory: [
-        { paymentId: 4, amount: 800000, paidAt: "2024-05-01", status: "PAID" },
-        { paymentId: 5, amount: 800000, paidAt: "2024-04-01", status: "PAID" },
-      ]
-    }
-  ]);
-
-  // 월세 수취 현황 목업 데이터
-  const [rentReceiveStatus] = useState<RentReceiveStatus[]>([
-    {
-      propertyId: 10,
-      propertyName: "서초동 투룸 아파트",
-      propertyAddress: "서울시 서초구 서초동 789-12",
-      monthlyRent: 2000000,
-      tenantName: "김영희",
-      contractStartDate: "2024-01-15",
-      nextReceiveDate: "2024-07-15",
-      totalReceived: 12000000,
-      receiveHistory: [
-        { receiptId: 1, amount: 2000000, receivedAt: "2024-06-15", status: "RECEIVED", tenantName: "김영희" },
-        { receiptId: 2, amount: 2000000, receivedAt: "2024-05-15", status: "RECEIVED", tenantName: "김영희" },
-        { receiptId: 3, amount: 2000000, receivedAt: "2024-04-15", status: "RECEIVED", tenantName: "김영희" },
-      ]
-    },
-    {
-      propertyId: 11,
-      propertyName: "양재동 오피스텔",
-      propertyAddress: "서울시 서초구 양재동 345-67",
-      monthlyRent: 1800000,
-      tenantName: "박철수",
-      contractStartDate: "2024-03-01",
-      nextReceiveDate: "2024-07-01",
-      totalReceived: 7200000,
-      receiveHistory: [
-        { receiptId: 4, amount: 1800000, receivedAt: "2024-06-01", status: "RECEIVED", tenantName: "박철수" },
-        { receiptId: 5, amount: 1800000, receivedAt: "2024-05-01", status: "RECEIVED", tenantName: "박철수" },
-      ]
-    }
-  ]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -157,19 +55,26 @@ const MyPage = () => {
         console.log('MyPage: 판매 매물 목록 응답:', salesProps);
         setSalesProperties(Array.isArray(salesProps) ? salesProps : []);
 
-        // 월세 납부 현황 조회 (매물별)
-        console.log('MyPage: 월세 납부 현황 조회 중...');
-        const paymentStatusData = await rentApi.getPropertyPaymentStatus();
-        console.log('MyPage: 월세 납부 현황 API 응답 원본:', paymentStatusData);
-        console.log('MyPage: paymentStatusData type:', typeof paymentStatusData);
-        console.log('MyPage: paymentStatusData isArray:', Array.isArray(paymentStatusData));
-        
-        if (paymentStatusData && Array.isArray(paymentStatusData)) {
-          console.log('MyPage: 배열 형태의 응답, 길이:', paymentStatusData.length);
-          setPaymentStatus(paymentStatusData);
+        // 월세 수취 현황 조회 (펀딩 수익)
+        console.log('MyPage: 월세 수취 현황 조회 중...');
+        const fundingIncomeData = await rentApi.getFundingIncome();
+        console.log('MyPage: 월세 수취 현황 API 응답:', fundingIncomeData);
+        if (fundingIncomeData.isSuccess && Array.isArray(fundingIncomeData.response)) {
+          setFundingIncome(fundingIncomeData.response);
         } else {
-          console.log('MyPage: 배열이 아닌 응답이거나 null, 빈 배열로 설정');
-          setPaymentStatus([]);
+          console.log('MyPage: 월세 수취 현황 응답이 비정상적이거나 빈 배열');
+          setFundingIncome([]);
+        }
+
+        // 월세 납부 현황 조회
+        console.log('MyPage: 월세 납부 현황 조회 중...');
+        const myPaymentsData = await rentApi.getMyRentPayments();
+        console.log('MyPage: 월세 납부 현황 API 응답:', myPaymentsData);
+        if (myPaymentsData.isSuccess && Array.isArray(myPaymentsData.response)) {
+          setMyRentPayments(myPaymentsData.response);
+        } else {
+          console.log('MyPage: 월세 납부 현황 응답이 비정상적이거나 빈 배열');
+          setMyRentPayments([]);
         }
         
         console.log('MyPage: 데이터 로딩 완료');
@@ -184,7 +89,8 @@ const MyPage = () => {
         // 에러 발생 시에도 빈 배열로 초기화
         setMyFundings([]);
         setSalesProperties([]);
-        setPaymentStatus([]);
+        setFundingIncome([]);
+        setMyRentPayments([]);
       } finally {
         setIsLoading(false);
       }
@@ -192,12 +98,6 @@ const MyPage = () => {
 
     loadData();
   }, []);
-
-  // 추가 디버깅을 위한 useEffect
-  useEffect(() => {
-    console.log('MyPage: paymentStatus 상태 변경됨:', paymentStatus);
-    console.log('MyPage: paymentStatus 길이:', paymentStatus.length);
-  }, [paymentStatus]);
 
   const formatPrice = (price: number | string) => {
     const numPrice = typeof price === 'string' ? parseInt(price) : price;
@@ -208,27 +108,53 @@ const MyPage = () => {
     setOpenItems(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handlePayRent = (propertyId: number, propertyName: string) => {
-    console.log(`월세 납부 요청 - 매물 ID: ${propertyId}, 매물명: ${propertyName}`);
-    // TODO: 월세 납부 API 연동 예정
-    toast({
-      title: "월세 납부",
-      description: `${propertyName}의 월세 납부 기능은 준비 중입니다.`,
-    });
-  };
-
-  const getPaymentStatusBadge = (status: 'PAID' | 'PENDING' | 'OVERDUE') => {
-    switch (status) {
-      case 'PAID':
-        return <Badge className="bg-green-100 text-green-800">납부완료</Badge>;
-      case 'PENDING':
-        return <Badge className="bg-yellow-100 text-yellow-800">납부대기</Badge>;
-      case 'OVERDUE':
-        return <Badge className="bg-red-100 text-red-800">연체</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const handlePayRent = async (propertyId: number) => {
+    try {
+      console.log(`월세 납부 요청 - 매물 ID: ${propertyId}`);
+      const result = await rentApi.payRent(propertyId);
+      
+      if (result.isSuccess) {
+        toast({
+          title: "월세 납부 완료",
+          description: "월세가 성공적으로 납부되었습니다.",
+        });
+        
+        // 납부 현황 새로고침
+        const myPaymentsData = await rentApi.getMyRentPayments();
+        if (myPaymentsData.isSuccess && Array.isArray(myPaymentsData.response)) {
+          setMyRentPayments(myPaymentsData.response);
+        }
+      } else {
+        toast({
+          title: "월세 납부 실패",
+          description: result.message || "월세 납부에 실패했습니다.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('월세 납부 실패:', error);
+      toast({
+        title: "월세 납부 실패",
+        description: "월세 납부 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
     }
   };
+
+  // 월세 납부 내역을 매물별로 그룹화
+  const groupPaymentsByProperty = (payments: RentPayment[]) => {
+    const grouped = payments.reduce((acc, payment) => {
+      if (!acc[payment.propertyId]) {
+        acc[payment.propertyId] = [];
+      }
+      acc[payment.propertyId].push(payment);
+      return acc;
+    }, {} as Record<number, RentPayment[]>);
+    
+    return grouped;
+  };
+
+  const groupedPayments = groupPaymentsByProperty(myRentPayments);
 
   if (isLoading) {
     return (
@@ -446,59 +372,37 @@ const MyPage = () => {
                     <CardDescription>내가 임대 신청한 매물별 월세 납부 내역을 확인하세요</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {rentPaymentStatus.length === 0 ? (
+                    {Object.keys(groupedPayments).length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         임대 신청한 매물이 없습니다.
                       </div>
                     ) : (
-                      rentPaymentStatus.map((rent) => (
-                        <Card key={`payment-${rent.propertyId}`} className="hover:shadow-md transition-shadow">
+                      Object.entries(groupedPayments).map(([propertyId, payments]) => (
+                        <Card key={`payment-${propertyId}`} className="hover:shadow-md transition-shadow">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-center mb-4">
                               <div className="text-left">
-                                <h3 className="font-semibold text-lg">{rent.propertyName}</h3>
-                                <p className="text-sm text-gray-600 mb-2">{rent.propertyAddress}</p>
+                                <h3 className="font-semibold text-lg">매물 ID: {propertyId}</h3>
                                 <div className="flex gap-2 mt-2">
-                                  {getPaymentStatusBadge(rent.paymentStatus)}
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                    월세: {formatPrice(rent.monthlyRent)}원
+                                  <Badge className="bg-blue-100 text-blue-800">
+                                    총 납부 내역: {payments.length}건
                                   </Badge>
-                                  <Badge variant="outline" className="bg-gray-50">
-                                    총 납부: {formatPrice(rent.totalPaid)}원
+                                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                                    총 납부액: {formatPrice(payments.reduce((sum, p) => sum + p.amount, 0))}원
                                   </Badge>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="mb-2">
-                                  <p className="text-sm text-gray-600">다음 납부일</p>
-                                  <p className="font-semibold">{rent.nextPaymentDate}</p>
-                                </div>
                                 <Button 
-                                  onClick={() => handlePayRent(rent.propertyId, rent.propertyName)}
+                                  onClick={() => handlePayRent(parseInt(propertyId))}
                                   className="bg-blue-600 hover:bg-blue-700"
-                                  disabled={rent.paymentStatus === 'PAID'}
                                 >
-                                  {rent.paymentStatus === 'PAID' ? '납부완료' : '월세 납부하기'}
+                                  월세 납부하기
                                 </Button>
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4 p-3 bg-gray-50 rounded-lg">
-                              <div>
-                                <span className="text-gray-600">계약 시작일</span>
-                                <p className="font-semibold">{rent.contractStartDate}</p>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">월 임대료</span>
-                                <p className="font-semibold text-blue-600">{formatPrice(rent.monthlyRent)}원</p>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">납부 횟수</span>
-                                <p className="font-semibold">{rent.paymentHistory.length}회</p>
-                              </div>
-                            </div>
-                            
-                            {rent.paymentHistory && rent.paymentHistory.length > 0 && (
+                            {payments && payments.length > 0 && (
                               <div className="mt-4 pt-4 border-t border-gray-200">
                                 <h4 className="font-medium text-sm text-gray-700 mb-3">납부 내역</h4>
                                 <Table>
@@ -507,11 +411,11 @@ const MyPage = () => {
                                       <TableHead className="text-xs">납부일</TableHead>
                                       <TableHead className="text-xs">금액</TableHead>
                                       <TableHead className="text-xs">상태</TableHead>
-                                      <TableHead className="text-xs">납부 ID</TableHead>
+                                      <TableHead className="text-xs">임대 ID</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {rent.paymentHistory.map((payment) => (
+                                    {payments.map((payment) => (
                                       <TableRow key={payment.paymentId}>
                                         <TableCell className="text-xs">{payment.paidAt}</TableCell>
                                         <TableCell className="text-xs font-semibold text-green-600">
@@ -519,10 +423,10 @@ const MyPage = () => {
                                         </TableCell>
                                         <TableCell className="text-xs">
                                           <Badge variant="outline" className="bg-green-100 text-green-800">
-                                            납부완료
+                                            {payment.status}
                                           </Badge>
                                         </TableCell>
-                                        <TableCell className="text-xs text-gray-500">#{payment.paymentId}</TableCell>
+                                        <TableCell className="text-xs text-gray-500">#{payment.rentId}</TableCell>
                                       </TableRow>
                                     ))}
                                   </TableBody>
@@ -542,65 +446,35 @@ const MyPage = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>월세 수취 현황</CardTitle>
-                    <CardDescription>내가 판매한 매물별 월세 수취 내역을 확인하세요</CardDescription>
+                    <CardDescription>내가 펀딩한 매물별 월세 수취 내역을 확인하세요</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {rentReceiveStatus.length === 0 ? (
+                    {fundingIncome.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
-                        임대 수취 내역이 없습니다.
+                        펀딩 수익 내역이 없습니다.
                       </div>
                     ) : (
-                      rentReceiveStatus.map((rent) => (
-                        <Card key={`receive-${rent.propertyId}`} className="hover:shadow-md transition-shadow">
+                      fundingIncome.map((income) => (
+                        <Card key={`receive-${income.propertyId}`} className="hover:shadow-md transition-shadow">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-center mb-4">
                               <div className="text-left">
-                                <h3 className="font-semibold text-lg">{rent.propertyName}</h3>
-                                <p className="text-sm text-gray-600 mb-2">{rent.propertyAddress}</p>
+                                <h3 className="font-semibold text-lg">매물 ID: {income.propertyId}</h3>
                                 <div className="flex gap-2 mt-2">
                                   <Badge className="bg-green-100 text-green-800">
-                                    임대 중
-                                  </Badge>
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                    월세: {formatPrice(rent.monthlyRent)}원
+                                    펀딩 비율: {income.fundingPercentage}%
                                   </Badge>
                                   <Badge variant="outline" className="bg-green-50 text-green-700">
-                                    총 수취: {formatPrice(rent.totalReceived)}원
+                                    총 수취액: {formatPrice(income.totalIncome)}원
+                                  </Badge>
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                    수취 건수: {income.payments.length}건
                                   </Badge>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <div className="mb-2">
-                                  <p className="text-sm text-gray-600">임차인</p>
-                                  <p className="font-semibold">{rent.tenantName}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-600">다음 수취일</p>
-                                  <p className="font-semibold text-green-600">{rent.nextReceiveDate}</p>
-                                </div>
-                              </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4 p-3 bg-gray-50 rounded-lg">
-                              <div>
-                                <span className="text-gray-600">계약 시작일</span>
-                                <p className="font-semibold">{rent.contractStartDate}</p>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">월 임대료</span>
-                                <p className="font-semibold text-green-600">{formatPrice(rent.monthlyRent)}원</p>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">수취 횟수</span>
-                                <p className="font-semibold">{rent.receiveHistory.length}회</p>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">임차인</span>
-                                <p className="font-semibold">{rent.tenantName}</p>
-                              </div>
-                            </div>
-                            
-                            {rent.receiveHistory && rent.receiveHistory.length > 0 && (
+                            {income.payments && income.payments.length > 0 && (
                               <div className="mt-4 pt-4 border-t border-gray-200">
                                 <h4 className="font-medium text-sm text-gray-700 mb-3">수취 내역</h4>
                                 <Table>
@@ -608,25 +482,23 @@ const MyPage = () => {
                                     <TableRow>
                                       <TableHead className="text-xs">수취일</TableHead>
                                       <TableHead className="text-xs">금액</TableHead>
-                                      <TableHead className="text-xs">임차인</TableHead>
                                       <TableHead className="text-xs">상태</TableHead>
-                                      <TableHead className="text-xs">수취 ID</TableHead>
+                                      <TableHead className="text-xs">임대 ID</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {rent.receiveHistory.map((receipt) => (
-                                      <TableRow key={receipt.receiptId}>
-                                        <TableCell className="text-xs">{receipt.receivedAt}</TableCell>
+                                    {income.payments.map((payment) => (
+                                      <TableRow key={payment.paymentId}>
+                                        <TableCell className="text-xs">{payment.paidAt}</TableCell>
                                         <TableCell className="text-xs font-semibold text-green-600">
-                                          {formatPrice(receipt.amount)}원
+                                          {formatPrice(payment.amount)}원
                                         </TableCell>
-                                        <TableCell className="text-xs">{receipt.tenantName}</TableCell>
                                         <TableCell className="text-xs">
                                           <Badge variant="outline" className="bg-green-100 text-green-800">
-                                            수취완료
+                                            {payment.status}
                                           </Badge>
                                         </TableCell>
-                                        <TableCell className="text-xs text-gray-500">#{receipt.receiptId}</TableCell>
+                                        <TableCell className="text-xs text-gray-500">#{payment.rentId}</TableCell>
                                       </TableRow>
                                     ))}
                                   </TableBody>

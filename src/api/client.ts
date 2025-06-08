@@ -1,4 +1,5 @@
-import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, RentRequest, RentResponse, RentApiResponse, RentListApiResponse, RentPaymentRequest, RentPaymentResponse, RentPaymentApiResponse, PropertyPaymentStatus, PropertyPaymentStatusApiResponse } from './types';
+
+import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, FundingIncomeApiResponse, MyRentPaymentApiResponse, RentPaymentApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
 
@@ -203,32 +204,27 @@ class ApiClient {
     return response.response;
   }
 
-  // 임대 관련 메서드들
-  async createRent(rentData: RentRequest): Promise<RentResponse> {
-    console.log('API Client: createRent 호출, rentData:', rentData);
-    const response = await this.makeRequest<RentApiResponse>('/rents', {
-      method: 'POST',
-      body: JSON.stringify(rentData),
-    });
-    console.log('API Client: createRent 응답:', response);
-    return response.response;
+  // 새로운 월세 관련 메서드들
+  async getFundingIncome(): Promise<FundingIncomeApiResponse> {
+    console.log('API Client: getFundingIncome 호출');
+    const response = await this.makeRequest<FundingIncomeApiResponse>('/fundings/me/income');
+    console.log('API Client: getFundingIncome 응답:', response);
+    return response;
   }
 
-  async payRent(paymentData: RentPaymentRequest): Promise<RentPaymentResponse> {
-    console.log('API Client: payRent 호출, paymentData:', paymentData);
-    const response = await this.makeRequest<RentPaymentApiResponse>('/rent-payment', {
+  async getMyRentPayments(): Promise<MyRentPaymentApiResponse> {
+    console.log('API Client: getMyRentPayments 호출');
+    const response = await this.makeRequest<MyRentPaymentApiResponse>('/rent-payment/my');
+    console.log('API Client: getMyRentPayments 응답:', response);
+    return response;
+  }
+
+  async payRent(propertyId: number): Promise<RentPaymentApiResponse> {
+    console.log('API Client: payRent 호출, propertyId:', propertyId);
+    const response = await this.makeRequest<RentPaymentApiResponse>(`/rent-payment/${propertyId}`, {
       method: 'POST',
-      body: JSON.stringify(paymentData),
     });
     console.log('API Client: payRent 응답:', response);
-    return response.response;
-  }
-
-  // 월세 납부 현황 조회 (매물별)
-  async getPropertyPaymentStatus(): Promise<PropertyPaymentStatus[]> {
-    console.log('API Client: getPropertyPaymentStatus 호출');
-    const response = await this.makeRequest<PropertyPaymentStatus[]>('/rent-payment/sendBy-property');
-    console.log('API Client: getPropertyPaymentStatus 응답:', response);
     return response;
   }
 }
