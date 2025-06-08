@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
-import { rentApi } from '@/api';
 
 const RentConfirm = () => {
   const { id } = useParams();
@@ -53,8 +52,9 @@ const RentConfirm = () => {
 
       console.log('RentConfirm: 임대 계약 생성 요청:', rentData);
       
-      const rentResponse = await rentApi.create(rentData);
-      console.log('RentConfirm: 임대 계약 생성 완료:', rentResponse);
+      // TODO: 임대 계약 생성 API가 구현되면 여기에 추가
+      // const rentResponse = await rentApi.create(rentData);
+      // console.log('RentConfirm: 임대 계약 생성 완료:', rentResponse);
       
       toast({
         title: "임대 신청 완료",
