@@ -44,7 +44,7 @@ const RentConfirm = () => {
         propertyId: parseInt(id),
         startDate: startDate.toISOString().split('T')[0], // YYYY-MM-DD 형식
         endDate: endDate.toISOString().split('T')[0],
-        deposit: Math.round(monthlyRent * 0.2), // 보증금은 월세의 20%
+        deposit: monthlyRent * 20, // 보증금은 월세의 20배
         paymentDay: 10 // 매월 10일 납부로 고정
       };
 
@@ -77,8 +77,8 @@ const RentConfirm = () => {
     return null;
   }
 
-  // 보증금 계산 (월세의 20%)
-  const deposit = Math.round(monthlyRent * 0.2);
+  // 보증금 계산 (월세의 20배)
+  const deposit = monthlyRent * 20;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -155,7 +155,7 @@ const RentConfirm = () => {
                 <li>• 펀딩 완료일부터 매월 자동으로 월세가 납부됩니다</li>
                 <li>• 임대 기간은 1년입니다</li>
                 <li>• 월세는 매월 10일에 자동 결제됩니다</li>
-                <li>• 보증금은 월세의 20%로 책정됩니다</li>
+                <li>• 보증금은 월세의 20배로 책정됩니다</li>
               </ul>
             </div>
             
