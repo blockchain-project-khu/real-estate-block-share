@@ -1,5 +1,4 @@
 
-
 import Web3 from 'web3';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/contracts/propertyContract';
 import { getWeb3Provider, getAccount } from './wallet';
@@ -60,17 +59,27 @@ export const buyShares = async (propertyId: number, numberOfShares: number) => {
 export const distributeRent = async (propertyId: number) => {
     console.log('distributeRent 호출:', propertyId);
     
-    const web3 = createWeb3Instance();
+    // 지갑 연결 확인
     const account = await getAccount();
     if (!account) {
         throw new Error("지갑이 연결되어 있지 않습니다");
     }
+    
+    console.log('지갑 연결 확인 완료, 계정:', account);
 
+    const web3 = createWeb3Instance();
     const propertyManager = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    
+    // 부동산 정보 조회하여 월세 금액 확인
     const property = await propertyManager.methods.getPropertyInfo(propertyId).call();
     const rent = property[3]; // rent는 property 정보의 4번째 요소 (index 3)
     
-    console.log('월세 정보:', rent);
+    console.log('월세 정보 조회 완료:', rent);
+    console.log('월세 금액 (Wei):', Number(rent));
+    console.log('월세 금액 (ETH):', Number(rent) / 1e18);
+    
+    // 트랜잭션 전송 (카이아 결제창이 여기서 표시되어야 함)
+    console.log('월세 배분 트랜잭션 전송 중...');
     
     const tx = await propertyManager.methods.distributeRent(propertyId).send({
         from: account,
