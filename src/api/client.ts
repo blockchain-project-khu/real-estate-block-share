@@ -204,7 +204,7 @@ class ApiClient {
     return response.response;
   }
 
-  // 새로운 월세 관련 메서드들
+  // 월세 관련 메서드들
   async getFundingIncome(): Promise<FundingIncomeApiResponse> {
     console.log('API Client: getFundingIncome 호출');
     const response = await this.makeRequest<FundingIncomeApiResponse>('/fundings/me/income');
@@ -226,6 +226,17 @@ class ApiClient {
     });
     console.log('API Client: payRent 응답:', response);
     return response;
+  }
+
+  // 새로운 임대 생성 메서드
+  async createRent(rentData: RentRequest): Promise<RentResponse> {
+    console.log('API Client: createRent 호출, rentData:', rentData);
+    const response = await this.makeRequest<RentApiResponse>('/rents', {
+      method: 'POST',
+      body: JSON.stringify(rentData),
+    });
+    console.log('API Client: createRent 응답:', response);
+    return response.response;
   }
 }
 

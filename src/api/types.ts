@@ -111,7 +111,7 @@ export interface FundingCreateApiResponse {
   response: number; // fundingId
 }
 
-// 새로운 월세 관련 타입들
+// 월세 수취 현황 관련 타입들
 export interface RentPayment {
   paymentId: number;
   rentId: number;
@@ -148,4 +148,35 @@ export interface RentPaymentApiResponse {
   code: string;
   message: string;
   response: RentPayment;
+}
+
+// 새로운 임대 관련 타입들
+export interface RentRequest {
+  propertyId: number;
+  startDate: string;
+  endDate: string;
+  deposit: number;
+  paymentDay: number;
+}
+
+export interface RentResponse {
+  rentId: number;
+  userId: number;
+  username: string;
+  propertyId: number;
+  propertyOwnerId: number;
+  propertyOwnerName: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  status: string;
+  paymentDay: number;
+}
+
+export interface RentApiResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  response: RentResponse;
 }
