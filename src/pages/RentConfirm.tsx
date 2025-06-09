@@ -134,7 +134,7 @@ const RentConfirm = () => {
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">월세 납부일</span>
-                <span className="text-lg font-bold">매월 13일</span>
+                <span className="text-lg font-bold">매월 5일~10일</span>
               </div>
               
               <div className="flex justify-between items-center">
@@ -153,7 +153,7 @@ const RentConfirm = () => {
                 <li>• 펀딩이 100% 완료되어야 임대가 시작됩니다</li>
                 <li>• 펀딩 완료일부터 매월 자동으로 월세가 납부됩니다</li>
                 <li>• 임대 기간은 1년입니다</li>
-                <li>• 월세는 매월 13일에 자동 결제됩니다</li>
+                <li>• 월세는 매월 5일부터 10일까지 납부 가능합니다</li>
                 <li>• 보증금은 월세의 20배로 책정됩니다</li>
               </ul>
             </div>
