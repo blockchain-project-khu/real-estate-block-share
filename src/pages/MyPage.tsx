@@ -126,18 +126,18 @@ const MyPage = () => {
     setOpenPaymentHistory(prev => ({ ...prev, [propertyId]: !prev[propertyId] }));
   };
 
-  // 납부일 체크 함수
-  const canPayRent = (payments: RentPayment[], paymentDay: number = 13) => {
+  // 납부일 체크 함수 - 매월 10일~15일로 확장
+  const canPayRent = (payments: RentPayment[]) => {
     const today = new Date();
     const currentDay = today.getDate();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
 
-    // 현재 날짜가 납부일이 아니면 납부 불가
-    if (currentDay !== paymentDay) {
+    // 현재 날짜가 납부 가능 기간(10일~15일)이 아니면 납부 불가
+    if (currentDay < 10 || currentDay > 15) {
       return {
         canPay: false,
-        reason: `매월 ${paymentDay}일에만 납부 가능합니다.`
+        reason: `매월 10일부터 15일까지만 납부 가능합니다.`
       };
     }
 
