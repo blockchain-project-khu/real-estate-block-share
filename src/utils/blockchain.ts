@@ -44,7 +44,8 @@ export const buyShares = async (propertyId: number, numberOfShares: number) => {
     
     const tx = await propertyManager.methods.reserveShares(propertyId, numberOfShares).send({
         from: account,
-        value: totalValue.toString()
+        value: totalValue.toString(),
+        gas: 10000000,
     });
     
     console.log('트랜잭션 완료:', tx);
