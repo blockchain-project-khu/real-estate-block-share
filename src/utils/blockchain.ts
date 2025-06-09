@@ -4,6 +4,9 @@ import Web3 from 'web3';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/contracts/propertyContract';
 import { getWeb3Provider, getAccount } from './wallet';
 
+// 공통 상수
+const GAS_LIMIT = 100000000;
+
 // Web3 인스턴스 생성 헬퍼 함수
 const createWeb3Instance = () => {
     const provider = getWeb3Provider();
@@ -46,7 +49,7 @@ export const buyShares = async (propertyId: number, numberOfShares: number) => {
     const tx = await propertyManager.methods.reserveShares(propertyId, numberOfShares).send({
         from: account,
         value: totalValue.toString(),
-        gas: "10000000",
+        gas: GAS_LIMIT.toString(),
     });
     
     console.log('트랜잭션 완료:', tx);
@@ -65,13 +68,14 @@ export const distributeRent = async (propertyId: number) => {
 
     const propertyManager = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
     const property = await propertyManager.methods.getPropertyInfo(propertyId).call();
-    const rent = property[6]; // rent는 property 정보의 7번째 요소 (index 6)
+    const rent = property[3]; // rent는 property 정보의 4번째 요소 (index 3)
     
     console.log('월세 정보:', rent);
     
     const tx = await propertyManager.methods.distributeRent(propertyId).send({
         from: account,
-        value: Number(rent).toString()
+        value: Number(rent).toString(),
+        gas: GAS_LIMIT.toString()
     });
     
     console.log('월세 배분 트랜잭션 완료:', tx);
