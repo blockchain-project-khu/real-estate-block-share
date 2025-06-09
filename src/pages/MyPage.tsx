@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import WalletConnection from '@/components/WalletConnection';
+import RentPaymentButton from '@/components/RentPaymentButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -162,47 +163,16 @@ const MyPage = () => {
     };
   };
 
-  const handlePayRent = async (propertyId: number, payments: RentPayment[]) => {
-    const paymentCheck = canPayRent(payments);
-    
-    if (!paymentCheck.canPay) {
-      toast({
-        title: "월세 납부 불가",
-        description: paymentCheck.reason,
-        variant: "destructive",
-      });
-      return;
-    }
-
+  // 월세 납부 성공 후 콜백 함수
+  const handlePaymentSuccess = async () => {
     try {
-      console.log(`월세 납부 요청 - 매물 ID: ${propertyId}`);
-      const result = await rentApi.payRent(propertyId);
-      
-      if (result.isSuccess) {
-        toast({
-          title: "월세 납부 완료",
-          description: "월세가 성공적으로 납부되었습니다.",
-        });
-        
-        // 납부 현황 새로고침
-        const myPaymentsData = await rentApi.getMyRentPayments();
-        if (myPaymentsData.isSuccess && Array.isArray(myPaymentsData.response)) {
-          setMyRentPayments(myPaymentsData.response);
-        }
-      } else {
-        toast({
-          title: "월세 납부 실패",
-          description: result.message || "월세 납부에 실패했습니다.",
-          variant: "destructive",
-        });
+      // 납부 현황 새로고침
+      const myPaymentsData = await rentApi.getMyRentPayments();
+      if (myPaymentsData.isSuccess && Array.isArray(myPaymentsData.response)) {
+        setMyRentPayments(myPaymentsData.response);
       }
     } catch (error) {
-      console.error('월세 납부 실패:', error);
-      toast({
-        title: "월세 납부 실패",
-        description: "월세 납부 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
+      console.error('납부 현황 새로고침 실패:', error);
     }
   };
 
@@ -482,13 +452,21 @@ const MyPage = () => {
                                       )}
                                     </div>
                                     <div className="text-right">
-                                      <Button 
-                                        onClick={() => handlePayRent(contract.id, contractPayments)}
-                                        disabled={!isSold || !paymentCheck.canPay}
-                                        className={`${isSold && paymentCheck.canPay ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-                                      >
-                                        월세 납부하기
-                                      </Button>
+                                      {isSold && paymentCheck.canPay ? (
+                                        <RentPaymentButton
+                                          propertyId={contract.id}
+                                          propertyName={contract.name}
+                                          monthlyRent={contract.monthlyRent}
+                                          onPaymentSuccess={handlePaymentSuccess}
+                                        />
+                                      ) : (
+                                        <Button 
+                                          disabled={true}
+                                          className="bg-gray-400 cursor-not-allowed"
+                                        >
+                                          월세 납부하기
+                                        </Button>
+                                      )}
                                     </div>
                                   </div>
                                   
