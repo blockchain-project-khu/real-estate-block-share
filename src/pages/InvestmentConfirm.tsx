@@ -11,12 +11,15 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
 import { fundingApi } from '@/api';
+import { useWallet } from '@/hooks/useWallet';
+import { buyShares, calculateShareCount } from '@/utils/blockchain';
 
 const InvestmentConfirm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [isConfirming, setIsConfirming] = useState(false);
+  const { wallet } = useWallet();
   
   const { percentage: initialPercentage, investmentAmount: initialInvestmentAmount, monthlyReturn: initialMonthlyReturn, propertyName, isEdit = false } = location.state || {};
   
@@ -44,10 +47,28 @@ const InvestmentConfirm = () => {
   const handleConfirm = async () => {
     if (!id) return;
     
+    // 지갑 연결 확인
+    if (!wallet.isConnected) {
+      toast({
+        title: "지갑 연결 필요",
+        description: "투자하려면 먼저 지갑을 연결해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsConfirming(true);
     
     try {
       if (!isEdit) {
+        // 블록체인 트랜잭션 실행
+        const shareCount = calculateShareCount(currentPercentage);
+        console.log(`투자 시작: ${currentPercentage}% (${shareCount}개 지분)`);
+        
+        const tx = await buyShares(parseInt(id), shareCount);
+        console.log('블록체인 트랜잭션 완료:', tx);
+        
+        // 백엔드에 데이터 저장
         const fundingId = await fundingApi.create(parseInt(id), currentPercentage);
         
         toast({
@@ -65,10 +86,10 @@ const InvestmentConfirm = () => {
       
       navigate('/mypage');
     } catch (error) {
-      console.error('Funding operation failed:', error);
+      console.error('투자 처리 실패:', error);
       toast({
         title: isEdit ? "투자 비율 수정 실패" : "투자 신청 실패",
-        description: "다시 시도해주세요.",
+        description: error instanceof Error ? error.message : "다시 시도해주세요.",
         variant: "destructive",
       });
     } finally {
@@ -106,6 +127,14 @@ const InvestmentConfirm = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {/* 지갑 연결 상태 확인 */}
+            {!wallet.isConnected && (
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <p className="text-red-800 font-medium">⚠️ 지갑 연결이 필요합니다</p>
+                <p className="text-red-600 text-sm mt-1">투자하려면 마이페이지에서 지갑을 먼저 연결해주세요.</p>
+              </div>
+            )}
+
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="font-semibold text-lg mb-2">{propertyName || '강남구 신축 오피스텔'}</h3>
               <Badge className="bg-blue-600">오피스텔</Badge>
@@ -143,6 +172,11 @@ const InvestmentConfirm = () => {
               </div>
               
               <div className="flex justify-between items-center">
+                <span className="text-gray-600">지분 개수</span>
+                <span className="text-xl font-bold">{calculateShareCount(currentPercentage)}개</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
                 <span className="text-gray-600">투자 금액</span>
                 <span className="text-xl font-bold">{formatPrice(calculatedInvestmentAmount)}만원</span>
               </div>
@@ -161,6 +195,7 @@ const InvestmentConfirm = () => {
                 <li>• 펀딩이 100% 완료되어야 수익이 발생합니다</li>
                 <li>• 실제 수익률은 시장 상황에 따라 변동될 수 있습니다</li>
                 <li>• {isEdit ? '수정 후에는' : '투자 후에는'} 펀딩 완료 전까지만 변경 가능합니다</li>
+                <li>• 블록체인 트랜잭션이 처리되므로 가스비가 발생할 수 있습니다</li>
               </ul>
             </div>
             
@@ -176,7 +211,7 @@ const InvestmentConfirm = () => {
               <Button 
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
                 onClick={handleConfirm}
-                disabled={isConfirming}
+                disabled={isConfirming || (!wallet.isConnected && !isEdit)}
               >
                 {isConfirming ? '처리중...' : (isEdit ? '수정 확인' : '투자 확인')}
               </Button>
