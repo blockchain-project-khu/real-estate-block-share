@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -155,6 +156,7 @@ const RentConfirm = () => {
                 <li>• 임대 기간은 1년입니다</li>
                 <li>• 월세는 매월 5일부터 10일까지 납부 가능합니다</li>
                 <li>• 보증금은 월세의 20배로 책정됩니다</li>
+                <li>• 월세 납부 시 블록체인을 통해 투자자들에게 자동 배분됩니다</li>
               </ul>
             </div>
             

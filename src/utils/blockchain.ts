@@ -33,6 +33,30 @@ export const buyShares = async (propertyId: number, numberOfShares: number) => {
     return tx;
 };
 
+// 월세 납부 및 배분
+export const distributeRent = async (propertyId: number) => {
+    const web3 = getWeb3Provider();
+    if (!web3) {
+        throw new Error("Web3 provider not found");
+    }
+
+    const account = await getAccount();
+    if (!account) {
+        throw new Error("지갑이 연결되어 있지 않습니다");
+    }
+
+    const propertyManager = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    const property = await propertyManager.methods.getPropertyInfo(propertyId).call();
+    const rent = property[6]; // rent는 property 정보의 7번째 요소 (index 6)
+    
+    const tx = await propertyManager.methods.distributeRent(propertyId).send({
+        from: account,
+        value: rent
+    });
+    
+    return tx;
+};
+
 // 지분 개수 계산 (percentage를 5로 나누어 계산)
 export const calculateShareCount = (percentage: number): number => {
     return percentage / 5;
