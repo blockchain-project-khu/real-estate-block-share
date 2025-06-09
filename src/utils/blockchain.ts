@@ -1,3 +1,4 @@
+
 import Web3 from 'web3';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/contracts/propertyContract';
 import { getWeb3Provider, getAccount } from './wallet';
@@ -76,7 +77,7 @@ export const distributeRent = async (propertyId: number) => {
     return tx;
 };
 
-// 부동산 정보 조회
+// 부동산 정보 조회 (업데이트됨)
 export const getPropertyInfo = async (propertyId: number) => {
     console.log('getPropertyInfo 호출:', propertyId);
     
@@ -88,7 +89,7 @@ export const getPropertyInfo = async (propertyId: number) => {
     return propertyInfo;
 };
 
-// 남은 지분 개수 조회
+// 남은 지분 개수 조회 (업데이트됨)
 export const getPendingBuyers = async (propertyId: number) => {
     console.log('getPendingBuyers 호출:', propertyId);
     
@@ -100,7 +101,7 @@ export const getPendingBuyers = async (propertyId: number) => {
     return propertyInfo[6];
 };
 
-// 지분 가격 조회
+// 지분 가격 조회 (업데이트됨)
 export const getSharePrice = async (propertyId: number) => {
     console.log('getSharePrice 호출:', propertyId);
     

@@ -27,7 +27,7 @@ export const getWeb3Provider = () => {
     return null;
 }
 
-// 계정 주소 가져오기
+// 계정 주소 가져오기 (업데이트됨)
 export const getAccount = async () => {
     const provider = getWeb3Provider();
     if (!provider) {
