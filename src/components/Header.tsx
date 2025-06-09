@@ -2,12 +2,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { User, Plus } from 'lucide-react';
+import { User, Plus, Wallet } from 'lucide-react';
 import { authApi } from '@/api';
 import { toast } from '@/hooks/use-toast';
+import { useWallet } from '@/hooks/useWallet';
 
 const Header = () => {
   const navigate = useNavigate();
+  const { wallet } = useWallet();
 
   const handleLogout = async () => {
     try {
@@ -24,6 +26,10 @@ const Header = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   return (
@@ -60,6 +66,14 @@ const Header = () => {
               <User size={16} />
               마이페이지
             </Button>
+
+            {/* 지갑 연결 상태 표시 */}
+            {wallet.isConnected && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-md border border-green-200">
+                <Wallet size={14} className="text-green-600" />
+                <span className="text-sm text-green-700">{formatAddress(wallet.address!)}</span>
+              </div>
+            )}
             
             <Button 
               variant="outline" 
