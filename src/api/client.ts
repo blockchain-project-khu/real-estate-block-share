@@ -168,7 +168,8 @@ class ApiClient {
   }
 
   async getSalesProperties(): Promise<PropertyResponse[]> {
-    return this.makeRequest<PropertyResponse[]>('/property/sales');
+    const response = await this.makeRequest<PropertyApiResponse>('/property/sales');
+    return response.response;
   }
 
   async getPropertyById(propertyId: number): Promise<PropertyResponse> {
