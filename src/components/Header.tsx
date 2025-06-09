@@ -2,14 +2,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { User, Plus, Wallet } from 'lucide-react';
+import { User, Plus } from 'lucide-react';
 import { authApi } from '@/api';
 import { toast } from '@/hooks/use-toast';
-import { useWalletContext } from '@/contexts/WalletContext';
 
 const Header = () => {
   const navigate = useNavigate();
-  const { wallet } = useWalletContext();
 
   const handleLogout = async () => {
     try {
@@ -62,13 +60,6 @@ const Header = () => {
               <User size={16} />
               마이페이지
             </Button>
-            
-            {wallet.isConnected && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                <Wallet size={14} />
-                {wallet.address?.slice(0, 6)}...{wallet.address?.slice(-4)}
-              </div>
-            )}
             
             <Button 
               variant="outline" 
