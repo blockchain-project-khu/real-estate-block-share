@@ -1,5 +1,4 @@
-
-import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, FundingIncomeApiResponse, MyRentPaymentApiResponse, RentPaymentApiResponse } from './types';
+import { LoginRequest, RegisterRequest, LoginResponse, PropertyRequest, PropertyResponse, PropertyApiResponse, PropertyDetailApiResponse, FundingResponse, FundingApiResponse, FundingListApiResponse, FundingCreateApiResponse, FundingIncomeApiResponse, MyRentPaymentApiResponse, RentPaymentApiResponse, RentRequest, RentResponse, RentApiResponse } from './types';
 
 const BASE_URL = 'http://localhost:8080/api';
 
