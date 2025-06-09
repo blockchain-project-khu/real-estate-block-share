@@ -238,6 +238,14 @@ class ApiClient {
     console.log('API Client: createRent 응답:', response);
     return response.response;
   }
+
+  // 내 임대 계약 조회 메서드 추가
+  async getMyRents(): Promise<PropertyResponse[]> {
+    console.log('API Client: getMyRents 호출');
+    const response = await this.makeRequest<PropertyApiResponse>('/rents');
+    console.log('API Client: getMyRents 응답:', response);
+    return response.response;
+  }
 }
 
 export const apiClient = new ApiClient(BASE_URL);
