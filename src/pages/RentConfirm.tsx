@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -45,7 +44,7 @@ const RentConfirm = () => {
         startDate: startDate.toISOString().split('T')[0], // YYYY-MM-DD 형식
         endDate: endDate.toISOString().split('T')[0],
         deposit: monthlyRent * 20, // 보증금은 월세의 20배
-        paymentDay: 10 // 매월 10일 납부로 고정
+        paymentDay: 13 // 매월 13일 납부로 변경
       };
 
       console.log('RentConfirm: 임대 계약 생성 요청:', rentData);
@@ -135,7 +134,7 @@ const RentConfirm = () => {
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">월세 납부일</span>
-                <span className="text-lg font-bold">매월 10일</span>
+                <span className="text-lg font-bold">매월 13일</span>
               </div>
               
               <div className="flex justify-between items-center">
@@ -154,7 +153,7 @@ const RentConfirm = () => {
                 <li>• 펀딩이 100% 완료되어야 임대가 시작됩니다</li>
                 <li>• 펀딩 완료일부터 매월 자동으로 월세가 납부됩니다</li>
                 <li>• 임대 기간은 1년입니다</li>
-                <li>• 월세는 매월 10일에 자동 결제됩니다</li>
+                <li>• 월세는 매월 13일에 자동 결제됩니다</li>
                 <li>• 보증금은 월세의 20배로 책정됩니다</li>
               </ul>
             </div>

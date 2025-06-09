@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -115,7 +114,7 @@ const MyPage = () => {
   };
 
   // 납부일 체크 함수
-  const canPayRent = (payments: RentPayment[], paymentDay: number = 1) => {
+  const canPayRent = (payments: RentPayment[], paymentDay: number = 13) => {
     const today = new Date();
     const currentDay = today.getDate();
     const currentMonth = today.getMonth();
