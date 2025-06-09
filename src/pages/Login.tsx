@@ -106,7 +106,7 @@ const Login = () => {
       
       <Card className="w-full max-w-md backdrop-blur-sm bg-white/95 shadow-2xl border border-white/20">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">RealEstate Invest</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900">RealEstate</CardTitle>
           <CardDescription className="text-gray-600">블록체인 기반 부동산 공동투자 플랫폼</CardDescription>
         </CardHeader>
         <CardContent>

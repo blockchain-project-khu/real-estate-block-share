@@ -12,7 +12,7 @@ import { PropertyWithMockData } from '@/api/types';
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('latest');
-  const [showFundingCompleted, setShowFundingCompleted] = useState(false);
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [properties, setProperties] = useState<PropertyWithMockData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,9 +63,9 @@ const Home = () => {
     const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.address.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesFundingFilter = showFundingCompleted ? property.fundingProgress === 100 : true;
+    const matchesAvailableFilter = showOnlyAvailable ? property.status === 'AVAILABLE' : true;
     
-    return matchesSearch && matchesFundingFilter;
+    return matchesSearch && matchesAvailableFilter;
   });
 
   if (isLoading) {
@@ -116,15 +116,15 @@ const Home = () => {
           
           <div className="flex items-center space-x-2">
             <Checkbox 
-              id="funding-completed" 
-              checked={showFundingCompleted}
-              onCheckedChange={(checked) => setShowFundingCompleted(checked === true)}
+              id="funding-available" 
+              checked={showOnlyAvailable}
+              onCheckedChange={(checked) => setShowOnlyAvailable(checked === true)}
             />
             <label 
-              htmlFor="funding-completed" 
+              htmlFor="funding-available" 
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              펀딩 완료된 매물만 보기
+              펀딩 진행중인 매물만 보기
             </label>
           </div>
         </div>

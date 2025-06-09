@@ -34,7 +34,7 @@ const Header = () => {
             className="flex items-center cursor-pointer" 
             onClick={() => navigate('/home')}
           >
-            <h1 className="text-xl font-bold text-blue-600">RealEstate Invest</h1>
+            <h1 className="text-xl font-bold text-blue-600">RealEstate</h1>
           </div>
           
           <nav className="flex items-center space-x-4">
