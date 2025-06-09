@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { ArrowUp } from 'lucide-react';
 import { propertyApi } from '@/api';
 import { PropertyWithMockData } from '@/api/types';
+import { getPropertyInfo, getSharePrice, getPendingBuyers } from '@/utils/blockchain';
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -18,6 +19,19 @@ const PropertyDetail = () => {
   const [fundingPercentage, setFundingPercentage] = useState([5]);
   const [property, setProperty] = useState<PropertyWithMockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 블록체인 데이터 상태
+  const [blockchainInfo, setBlockchainInfo] = useState<{
+    propertyInfo: any;
+    sharePrice: number;
+    pendingBuyers: number;
+    isLoading: boolean;
+  }>({
+    propertyInfo: null,
+    sharePrice: 0,
+    pendingBuyers: 0,
+    isLoading: true
+  });
 
   const mockImages = [
     "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
@@ -65,6 +79,37 @@ const PropertyDetail = () => {
     };
 
     loadProperty();
+  }, [id]);
+
+  // 블록체인 데이터 로드
+  useEffect(() => {
+    const loadBlockchainData = async () => {
+      if (!id) return;
+      
+      try {
+        console.log('블록체인 데이터 로딩 시작:', id);
+        
+        const [propertyInfo, sharePrice, pendingBuyers] = await Promise.all([
+          getPropertyInfo(parseInt(id)),
+          getSharePrice(parseInt(id)),
+          getPendingBuyers(parseInt(id))
+        ]);
+        
+        console.log('블록체인 데이터:', { propertyInfo, sharePrice, pendingBuyers });
+        
+        setBlockchainInfo({
+          propertyInfo,
+          sharePrice,
+          pendingBuyers: Number(pendingBuyers),
+          isLoading: false
+        });
+      } catch (error) {
+        console.error('블록체인 데이터 로딩 실패:', error);
+        setBlockchainInfo(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    loadBlockchainData();
   }, [id]);
 
   const formatPrice = (price: number) => {
@@ -130,6 +175,7 @@ const PropertyDetail = () => {
   }
 
   const investment = calculateInvestment();
+  const remainingShares = 20 - blockchainInfo.pendingBuyers;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -216,6 +262,34 @@ const PropertyDetail = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* 블록체인 정보 추가 */}
+                <Separator />
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">블록체인 정보</h3>
+                  {blockchainInfo.isLoading ? (
+                    <div className="text-gray-500">블록체인 데이터 로딩 중...</div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600">지분 가격</span>
+                        <p className="text-lg font-semibold">{blockchainInfo.sharePrice.toFixed(4)} ETH</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">남은 지분</span>
+                        <p className="text-lg font-semibold">{remainingShares}/20개</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">판매된 지분</span>
+                        <p className="text-lg font-semibold">{blockchainInfo.pendingBuyers}개</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">블록체인 상태</span>
+                        <p className="text-lg font-semibold text-blue-600">활성</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -261,6 +335,21 @@ const PropertyDetail = () => {
                     <span className="text-gray-600">예상 수익률</span>
                     <span className="font-bold text-lg">{property.expectedYield}%</span>
                   </div>
+
+                  {/* 블록체인 투자 정보 */}
+                  {!blockchainInfo.isLoading && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">구매 지분 수</span>
+                        <span className="font-bold text-lg text-blue-600">{investment.percentage / 5}개</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">지분당 가격</span>
+                        <span className="font-bold text-lg">{blockchainInfo.sharePrice.toFixed(4)} ETH</span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 <Button 

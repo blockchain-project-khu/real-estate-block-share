@@ -57,6 +57,42 @@ export const distributeRent = async (propertyId: number) => {
     return tx;
 };
 
+// 부동산 정보 조회
+export const getPropertyInfo = async (propertyId: number) => {
+    const web3 = getWeb3Provider();
+    if (!web3) {
+        throw new Error("Web3 provider not found");
+    }
+
+    const propertyManager = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    const propertyInfo = await propertyManager.methods.getPropertyInfo(propertyId).call();
+    return propertyInfo;
+};
+
+// 남은 지분 개수 조회
+export const getPendingBuyers = async (propertyId: number) => {
+    const web3 = getWeb3Provider();
+    if (!web3) {
+        throw new Error("Web3 provider not found");
+    }
+
+    const propertyManager = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    const propertyInfo = await propertyManager.methods.getPropertyInfo(propertyId).call();
+    return propertyInfo[6];
+};
+
+// 지분 가격 조회
+export const getSharePrice = async (propertyId: number) => {
+    const web3 = getWeb3Provider();
+    if (!web3) {
+        throw new Error("Web3 provider not found");
+    }
+
+    const propertyManager = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    const sharePrice = await propertyManager.methods.getSharePrice(propertyId).call();
+    return Number(sharePrice) / 1e18;
+};
+
 // 지분 개수 계산 (percentage를 5로 나누어 계산)
 export const calculateShareCount = (percentage: number): number => {
     return percentage / 5;
