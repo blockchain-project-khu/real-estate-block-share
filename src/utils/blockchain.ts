@@ -37,9 +37,14 @@ export const buyShares = async (propertyId: number, numberOfShares: number) => {
     }
 
     console.log('트랜잭션 전송 중...');
+    
+    // BigInt 값을 숫자로 변환하여 계산
+    const sharePriceNum = Number(sharePrice);
+    const totalValue = sharePriceNum * numberOfShares;
+    
     const tx = await propertyManager.methods.reserveShares(propertyId, numberOfShares).send({
         from: account,
-        value: sharePrice * numberOfShares
+        value: totalValue.toString()
     });
     
     console.log('트랜잭션 완료:', tx);
@@ -64,7 +69,7 @@ export const distributeRent = async (propertyId: number) => {
     
     const tx = await propertyManager.methods.distributeRent(propertyId).send({
         from: account,
-        value: rent
+        value: Number(rent).toString()
     });
     
     console.log('월세 배분 트랜잭션 완료:', tx);
