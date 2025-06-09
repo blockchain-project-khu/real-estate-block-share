@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -29,10 +28,10 @@ const PropertyRegister = () => {
   const propertyTypes = [
     { value: 'OFFICETEL', label: '오피스텔' },
     { value: 'APARTMENT', label: '아파트' },
-    { value: 'VILLA', label: '빌라' },
+    { value: 'COMMERCIAL', label: '상가' },
     { value: 'OFFICE', label: '오피스' },
-    { value: 'STUDIO', label: '원룸' },
-    { value: 'COMMERCIAL', label: '상가' }
+    { value: 'ONE_ROOM', label: '원룸' },
+    { value: 'PENSION', label: '펜션' }
   ];
 
   const handleInputChange = (field: string, value: string) => {

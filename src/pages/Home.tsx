@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import PropertyCard from '@/components/PropertyCard';
@@ -27,10 +26,10 @@ const Home = () => {
   const propertyTypeMap: Record<string, string> = {
     'OFFICETEL': '오피스텔',
     'APARTMENT': '아파트',
-    'VILLA': '빌라',
+    'COMMERCIAL': '상가',
     'OFFICE': '오피스',
-    'STUDIO': '원룸',
-    'COMMERCIAL': '상가'
+    'ONE_ROOM': '원룸',
+    'PENSION': '펜션'
   };
 
   useEffect(() => {
