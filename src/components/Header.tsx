@@ -9,11 +9,15 @@ import { useWallet } from '@/hooks/useWallet';
 
 const Header = () => {
   const navigate = useNavigate();
-  const { wallet } = useWallet();
+  const { wallet, disconnect } = useWallet();
 
   const handleLogout = async () => {
     try {
       await authApi.logout();
+      
+      // 지갑 연결도 함께 해제
+      disconnect();
+      
       toast({
         title: "로그아웃 완료",
         description: "성공적으로 로그아웃되었습니다.",
