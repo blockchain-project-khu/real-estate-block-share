@@ -1,4 +1,5 @@
 
+
 import Web3 from 'web3';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/contracts/propertyContract';
 import { getWeb3Provider, getAccount } from './wallet';
@@ -26,11 +27,11 @@ export const buyShares = async (propertyId: number, numberOfShares: number) => {
 
     const propertyManager = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
     const sharePrice = await propertyManager.methods.getSharePrice(propertyId).call();
+    const pendingBuyers = await getPendingBuyers(propertyId);
+    const leftShares = 20 - Number(pendingBuyers);
     
     console.log('지분 가격 조회 완료:', sharePrice);
-    
-    // 임시로 getPendingBuyers 대신 0으로 설정 (실제로는 컨트랙트에서 가져와야 함)
-    const leftShares = 20 - 0; // 총 20개 지분 중 남은 지분
+    console.log('남은 지분:', leftShares);
 
     if (leftShares < numberOfShares) {
         throw new Error("❌ 남은 지분이 부족합니다");
@@ -118,3 +119,4 @@ export const getSharePrice = async (propertyId: number) => {
 export const calculateShareCount = (percentage: number): number => {
     return percentage / 5;
 };
+
