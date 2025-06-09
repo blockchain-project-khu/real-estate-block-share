@@ -1,4 +1,3 @@
-
 import Web3 from 'web3';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/contracts/propertyContract';
 import { getWeb3Provider, getAccount } from './wallet';
@@ -45,7 +44,7 @@ export const buyShares = async (propertyId: number, numberOfShares: number) => {
     const tx = await propertyManager.methods.reserveShares(propertyId, numberOfShares).send({
         from: account,
         value: totalValue.toString(),
-        gas: 10000000,
+        gas: "10000000",
     });
     
     console.log('트랜잭션 완료:', tx);
